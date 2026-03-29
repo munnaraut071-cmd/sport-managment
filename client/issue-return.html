@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SPORTKITS Dashboard</title>
+
+<style>
+body{
+  font-family:"Segoe UI", Arial;
+  background:#ffffff;
+  color:#222;
+  padding:20px;
+}
+
+h2{ color:#e50914; }
+
+.form-box{
+  background:#fff;
+  padding:20px;
+  border-radius:10px;
+  box-shadow:0 0 10px rgba(229,9,20,0.2);
+  border: 2px solid #e50914;
+}
+
+input, select{
+  padding:8px;
+  margin:5px;
+  border:1px solid #ccc;
+  border-radius:4px;
+}
+
+button{
+  background:#e50914;
+  color:white;
+  border:none;
+  padding:8px 14px;
+  cursor:pointer;
+  border-radius:5px;
+}
+
+button:hover{ background:#b20710; }
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:20px;
+  background:#fff;
+}
+
+th, td{
+  border:1px solid #ddd;
+  padding:10px;
+  text-align:center;
+}
+
+th{ background:#e50914; color: white; }
+
+.counter{
+  margin-top:15px;
+  font-size:18px;
+  color: #e50914;
+}
+
+canvas{
+  border:1px solid #fff;
+  background:#fff;
+  cursor:crosshair;
+  border: 2px solid #999;
+  display: block;
+  margin: 10px 0;
+}
+</style>
+</head>
+
+<body>
+
+<h2>Allocation of Sport Equipments    
+<button class="record-btn" onclick="window.location.href='Snooker%20%26%20Pool%20Register.html'">
+  RECORDS OF USE OF SNOOKER & POOL TABLE
+</button>
+</h2>
+
+
+<div class="form-box">
+<input id="code" placeholder="Kit Code" >
+<h4>Scan kit QR</h4>
+<div id="reader" style="width:300px; margin-bottom: 10px;"></div>
+<input id="kitname" placeholder="Kit Name">
+<input id="name" placeholder="Student Name">
+<input id="sid" placeholder="Student ID">
+<input id="class" placeholder="Class">
+<input id="contact" placeholder="Contact No">
+
+<select id="sport">
+<option>Cricket</option>
+<option>Football</option>
+<option>Badminton</option>
+<option>Table Tennis Kits</option>
+<option>Football Kits</option>
+</select>
+
+<input id="qty" type="number" placeholder="Quantity">
+
+<select id="condition">
+<option>New</option>
+<option>Old</option>
+<option>Good</option>
+<option>Damaged</option>
+</select>
+
+<input id="date" type="date">
+<input id="remarks" placeholder="Remarks">
+
+<br><br>
+Signature:<br>
+<canvas id="signPad" width="200" height="60"></canvas><br>
+<button onclick="clearSignature()">Clear Sign</button>
+
+<br><br>
+<button onclick="issueKit()">Issue</button>
+<button onclick="returnKit()">Return</button>
+</div>
+
+<div class="counter">
+Total Issued: <span id="issued">0</span> |
+Total Returned: <span id="returned">0</span>
+</div>
+
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Kit Name</th>
+<th>Student</th>
+<th>ID</th>
+<th>Class</th>
+<th>Contact</th>
+<th>Sport</th>
+<th>Qty</th>
+<th>Condition</th>
+<th>Date</th>
+<th>Remarks</th>
+<th>Sign</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody id="table"></tbody>
+</table>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<script>
+  
+function onScanSuccess(decodedText) {
+  document.getElementById("code").value = decodedText;
+}
+
+new Html5QrcodeScanner("reader", {
+  fps: 10,
+  qrbox: 200
+}).render(onScanSuccess);
+
+  
+  
+  let code = document.getElementById("code");
+  let kitname = document.getElementById("kitname");
+window.addEventListener("load", ()=>{
+  const codeValue=sessionStorage.getItem("id");
+  const nameValue=sessionStorage.getItem("name");
+  if(codeValue || nameValue){
+    code.value=codeValue;
+    kitname.value=nameValue;
+  }
+})
+
+let issuedCount = 0;
+let returnedCount = 0;
+
+/* Signature Pad */
+const canvas = document.getElementById("signPad");
+const ctx = canvas.getContext("2d");
+let drawing = false;
+
+// Set canvas background to white
+ctx.fillStyle = "white";
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+canvas.addEventListener("mousedown", (e) => {
+  drawing = true;
+  const rect = canvas.getBoundingClientRect();
+  ctx.beginPath();
+  ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+});
+
+canvas.addEventListener("mouseup", () => drawing = false);
+canvas.addEventListener("mouseleave", () => drawing = false);
+
+canvas.addEventListener("mousemove", function(e){
+  if(!drawing) return;
+  const rect = canvas.getBoundingClientRect();
+  ctx.lineWidth = 2;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.strokeStyle = "#000";
+  ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+  ctx.stroke();
+});
+
+// Touch support for mobile
+canvas.addEventListener("touchstart", (e) => {
+  e.preventDefault();
+  drawing = true;
+  const rect = canvas.getBoundingClientRect();
+  const touch = e.touches[0];
+  ctx.beginPath();
+  ctx.moveTo(touch.clientX - rect.left, touch.clientY - rect.top);
+});
+
+canvas.addEventListener("touchend", () => drawing = false);
+canvas.addEventListener("touchcancel", () => drawing = false);
+
+canvas.addEventListener("touchmove", (e) => {
+  e.preventDefault();
+  if(!drawing) return;
+  const rect = canvas.getBoundingClientRect();
+  const touch = e.touches[0];
+  ctx.lineWidth = 2;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.strokeStyle = "#000";
+  ctx.lineTo(touch.clientX - rect.left, touch.clientY - rect.top);
+  ctx.stroke();
+});
+
+function clearSignature(){
+  ctx.fillStyle = "white";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+
+function isSignatureTaken(){
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+  for(let i = 0; i < imageData.length; i += 4){
+    // Check if any pixel is not white (not full opacity white)
+    if(imageData[i + 3] === 255 && (imageData[i] < 255 || imageData[i + 1] < 255 || imageData[i + 2] < 255)){
+      return true;
+    }
+  }
+  return false;
+}
+
+/* Data */
+function getData(status){
+
+let student = document.getElementById("name").value;
+let sid = document.getElementById("sid").value;
+let cls = document.getElementById("class").value;
+let contact = document.getElementById("contact").value;
+let sport = document.getElementById("sport").value;
+let qty = document.getElementById("qty").value;
+let condition = document.getElementById("condition").value;
+let date = document.getElementById("date").value;
+let remarks = document.getElementById("remarks").value;
+
+// Validate required fields
+if(!code.value || !kitname.value || !student || !sid || !cls || !contact || !qty || !date){
+  alert("Please fill in all required fields");
+  return null;
+}
+
+let signImage = canvas.toDataURL();
+
+return `
+<tr>
+<td>${code.value}</td>
+<td>${kitname.value}</td>
+<td>${student}</td>
+<td>${sid}</td>
+<td>${cls}</td>
+<td>${contact}</td>
+<td>${sport}</td>
+<td>${qty}</td>
+<td>${condition}</td>
+<td>${date}</td>
+<td>${remarks}</td>
+<td><img src="${signImage}" width="80"></td>
+<td>${status}</td>
+</tr>`;
+}
+
+function issueKit(){
+  if(!isSignatureTaken()){
+    alert("Please sign before issuing kit");
+    return;
+  }
+  let row = getData("Issued");
+  if(row){
+    document.getElementById("table").innerHTML += row;
+    issuedCount++;
+    document.getElementById("issued").textContent = issuedCount;
+    clearForm();
+  }
+}
+
+function returnKit(){
+  if(!isSignatureTaken()){
+    alert("Please sign before returning kit");
+    return;
+  }
+  let row = getData("Returned");
+  if(row){
+    document.getElementById("table").innerHTML += row;
+    returnedCount++;
+    document.getElementById("returned").textContent = returnedCount;
+    clearForm();
+  }
+}
+
+function clearForm(){
+document.querySelectorAll("input").forEach(i => i.value="");
+clearSignature();
+}
+
+
+</script>
+
+</body>
+</html>
+
+
+
+
+
+
+

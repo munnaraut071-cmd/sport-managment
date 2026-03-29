@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entry Register with Signature - SPORTKITS</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        /* =============== ENTRY REGISTER SIGNATURE =============== */
+        .register-sig-section {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            min-height: 100vh;
+            padding: 40px 0;
+        }
+
+        .register-sig-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .register-sig-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: linear-gradient(135deg, #1a1a1a 0%, #222 100%);
+            border-left: 4px solid #ff3b3b;
+            border-radius: 8px;
+        }
+
+        .register-sig-header h1 {
+            font-size: 42px;
+            color: #fff;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .register-sig-header h1 i {
+            color: #ff3b3b;
+        }
+
+        .register-sig-header p {
+            color: #aaa;
+            font-size: 16px;
+        }
+
+        /* Table Wrapper */
+        .table-wrapper {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            margin-bottom: 30px;
+        }
+
+        .table-header {
+            padding: 25px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-header h2 {
+            font-size: 22px;
+            color: #fff;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .table-header h2::before {
+            content: '';
+            width: 4px;
+            height: 22px;
+            background: #ff3b3b;
+            border-radius: 2px;
+        }
+
+        .table-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Table Styles */
+        .entry-table {
+            width: 100%;
+            border-collapse: collapse;
+            overflow-x: auto;
+        }
+
+        .entry-table thead {
+            background: #0a0a0a;
+        }
+
+        .entry-table th {
+            padding: 16px;
+            text-align: left;
+            color: #ff3b3b;
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #333;
+            white-space: nowrap;
+        }
+
+        .entry-table tbody tr {
+            border-bottom: 1px solid #222;
+        }
+
+        .entry-table tbody tr:hover {
+            background: #1a1a1a;
+        }
+
+        .entry-table td {
+            padding: 12px;
+            color: #ddd;
+            font-size: 13px;
+        }
+
+        .entry-table td:first-child {
+            color: #ff3b3b;
+            font-weight: 600;
+            width: 40px;
+        }
+
+        /* Form Inputs */
+        .entry-table input,
+        .entry-table select {
+            width: 100%;
+            padding: 8px;
+            background: #0a0a0a;
+            border: 1px solid #333;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 13px;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .entry-table input::placeholder {
+            color: #666;
+        }
+
+        .entry-table input:focus,
+        .entry-table select:focus {
+            outline: none;
+            border-color: #ff3b3b;
+            background: #0a0a0a;
+            box-shadow: 0 0 0 2px rgba(255, 59, 59, 0.1);
+        }
+
+        /* Canvas Signature */
+        .signature-cell {
+            position: relative;
+        }
+
+        .signature-canvas {
+            display: block;
+            border: 1px solid #444;
+            background: #0a0a0a;
+            cursor: crosshair;
+            border-radius: 4px;
+            width: 100%;
+            height: 60px;
+            margin-bottom: 5px;
+        }
+
+        .signature-canvas:hover {
+            border-color: #ff3b3b;
+        }
+
+        .sig-buttons {
+            display: flex;
+            gap: 5px;
+        }
+
+        .sig-btn {
+            flex: 1;
+            padding: 6px;
+            font-size: 11px;
+            border: 1px solid #333;
+            background: #0a0a0a;
+            color: #aaa;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .sig-btn:hover {
+            background: #1a1a1a;
+            color: #fff;
+            border-color: #ff3b3b;
+        }
+
+        .sig-btn.save {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4caf50;
+            border-color: #4caf50;
+        }
+
+        .sig-btn.save:hover {
+            background: rgba(76, 175, 80, 0.3);
+        }
+
+        /* Action Buttons */
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            border: 1px solid #333;
+            background: #0a0a0a;
+            color: #666;
+            border-radius: 4px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            font-size: 13px;
+        }
+
+        .action-btn:hover {
+            background: #1a1a1a;
+            border-color: #ff3b3b;
+            color: #ff3b3b;
+        }
+
+        .action-btn.delete:hover {
+            background: rgba(244, 67, 54, 0.2);
+            color: #f44336;
+            border-color: #f44336;
+        }
+
+        /* Buttons */
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #ff3b3b 0%, #ff0000 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #ff5555 0%, #ff2020 100%);
+            box-shadow: 0 4px 15px rgba(255, 59, 59, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #222;
+            color: #aaa;
+            border: 1px solid #333;
+        }
+
+        .btn-secondary:hover {
+            background: #2a2a2a;
+            color: #fff;
+            border-color: #444;
+        }
+
+        .btn-success {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4caf50;
+            border: 1px solid #4caf50;
+        }
+
+        .btn-success:hover {
+            background: rgba(76, 175, 80, 0.3);
+            border-color: #4caf50;
+        }
+
+        /* Info Box */
+        .info-box {
+            background: rgba(33, 150, 243, 0.1);
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+            color: #aaa;
+            font-size: 13px;
+        }
+
+        .info-box i {
+            color: #2196f3;
+            margin-right: 10px;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .register-sig-container {
+                max-width: 95%;
+            }
+
+            .entry-table {
+                font-size: 12px;
+            }
+
+            .entry-table th,
+            .entry-table td {
+                padding: 10px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .register-sig-header h1 {
+                font-size: 28px;
+            }
+
+            .table-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .table-controls {
+                width: 100%;
+                flex-direction: column;
+            }
+
+            .table-controls button {
+                width: 100%;
+            }
+
+            .entry-table {
+                font-size: 11px;
+                display: block;
+                overflow-x: auto;
+            }
+
+            .entry-table thead {
+                display: none;
+            }
+
+            .entry-table tbody,
+            .entry-table tr,
+            .entry-table td {
+                display: block;
+                width: 100%;
+            }
+
+            .entry-table tr {
+                margin-bottom: 15px;
+                border: 1px solid #333;
+                border-radius: 5px;
+                overflow: hidden;
+            }
+
+            .entry-table td {
+                text-align: right;
+                padding-left: 50%;
+                position: relative;
+                border: none;
+                border-bottom: 1px solid #222;
+            }
+
+            .entry-table td::before {
+                content: attr(data-label);
+                position: absolute;
+                left: 10px;
+                font-weight: bold;
+                color: #ff3b3b;
+                text-transform: uppercase;
+                font-size: 11px;
+            }
+
+            .signature-canvas {
+                height: 50px;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <header class="navbar">
+        <div class="logo">SPORT<span>KITS</span></div>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="gym.html">Gym</a>
+            <a href="dance.html">Dance Room</a>
+            <a href="register.html">
+                <i class="fa fa-file-signature"></i> Entry Register
+            </a>
+        </nav>
+        <div class="icons">
+            <div class="search-box" id="searchBox">
+                <button type="button" id="openSearch" class="icon-btn" aria-label="Open search" onclick="toggleSearch()">
+                    <i class="fa fa-search" aria-hidden="true"></i>
+                </button>
+                <input type="text" id="searchInput" placeholder="Search..." />
+            </div>
+        </div>
+    </header>
+
+    <!-- Register Section -->
+    <section class="register-sig-section">
+        <div class="register-sig-container">
+            <!-- Header -->
+            <div class="register-sig-header">
+                <h1><i class="fa fa-pen-fancy"></i> Entry Register With Signature</h1>
+                <p>Record kit entries with digital signature verification</p>
+            </div>
+
+            <!-- Info Box -->
+            <div class="info-box">
+                <i class="fa fa-info-circle"></i>
+                <span>Click on the signature canvas to draw. Use Clear button to reset. Click Save to confirm signature.</span>
+            </div>
+
+            <!-- Table Controls -->
+            <div class="table-wrapper">
+                <div class="table-header">
+                    <h2>Entry Records</h2>
+                    <div class="table-controls">
+                        <button class="btn btn-primary" onclick="addRow()">
+                            <i class="fa fa-plus"></i> Add Entry
+                        </button>
+                        <button class="btn btn-secondary" onclick="exportData()">
+                            <i class="fa fa-download"></i> Export
+                        </button>
+                        <button class="btn btn-secondary" onclick="printTable()">
+                            <i class="fa fa-print"></i> Print
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <table class="entry-table">
+                    <thead>
+                        <tr>
+                            <th>S.No</th>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Roll / Code</th>
+                            <th>Date</th>
+                            <th>In Time</th>
+                            <th>Out Time</th>
+                            <th>Signature</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+
+            <!-- Add Sample Data Button -->
+            <div class="btn-group">
+                <button class="btn btn-secondary" onclick="addRow()">
+                    <i class="fa fa-plus-circle"></i> Add New Entry
+                </button>
+                <button class="btn btn-secondary" onclick="clearAllData()">
+                    <i class="fa fa-trash"></i> Clear All Data
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        let count = 0;
+
+        // Toggle Search
+        function toggleSearch() {
+            const searchBox = document.getElementById('searchBox');
+            searchBox.classList.toggle('active');
+        }
+
+        // Add New Row
+        function addRow() {
+            count++;
+            let row = document.createElement("tr");
+            
+            row.innerHTML = `
+                <td>${count}</td>
+                <td><input type="text" placeholder="Member Name" data-label="Name"></td>
+                <td>
+                    <select data-label="Type">
+                        <option>Student</option>
+                        <option>Staff</option>
+                        <option>Coach</option>
+                        <option>Visitor</option>
+                    </select>
+                </td>
+                <td><input type="text" placeholder="ID/Code" data-label="Roll / Code"></td>
+                <td><input type="date" data-label="Date"></td>
+                <td><input type="time" data-label="In Time"></td>
+                <td><input type="time" data-label="Out Time"></td>
+                <td class="signature-cell" data-label="Signature">
+                    <canvas class="signature-canvas" width="200" height="60"></canvas>
+                    <div class="sig-buttons">
+                        <button class="sig-btn" onclick="clearSignature(this)">Clear</button>
+                        <button class="sig-btn save" onclick="saveSignature(this)">Save</button>
+                    </div>
+                </td>
+                <td>
+                    <button class="action-btn" title="Delete" onclick="deleteRow(this)">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </td>
+            `;
+
+            document.getElementById("tableBody").appendChild(row);
+            enableSignature(row.querySelector(".signature-canvas"));
+            setDefaultDate(row.querySelector("input[type='date']"));
+        }
+
+        // Enable Signature Drawing
+        function enableSignature(canvas) {
+            let ctx = canvas.getContext("2d");
+            let drawing = false;
+            let isSignatureSaved = false;
+
+            canvas.addEventListener("mousedown", (e) => {
+                drawing = true;
+                if (isSignatureSaved) {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    isSignatureSaved = false;
+                    canvas.parentElement.classList.remove('signature-saved');
+                }
+            });
+
+            canvas.addEventListener("mouseup", () => drawing = false);
+            canvas.addEventListener("mouseleave", () => drawing = false);
+            canvas.addEventListener("mousemove", draw);
+
+            function draw(e) {
+                if (!drawing) return;
+                
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                ctx.lineWidth = 2;
+                ctx.lineCap = "round";
+                ctx.lineJoin = "round";
+                ctx.strokeStyle = "#ff3b3b";
+                
+                ctx.lineTo(x, y);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+            }
+
+            // Store for later use
+            canvas.saveSignature = function() {
+                isSignatureSaved = true;
+                canvas.parentElement.classList.add('signature-saved');
+                showNotification('Signature saved successfully!', 'success');
+            };
+
+            canvas.clearSignature = function() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                isSignatureSaved = false;
+                canvas.parentElement.classList.remove('signature-saved');
+            };
+        }
+
+        // Clear Signature
+        function clearSignature(btn) {
+            let canvas = btn.parentElement.previousElementSibling;
+            canvas.clearSignature();
+        }
+
+        // Save Signature
+        function saveSignature(btn) {
+            let canvas = btn.parentElement.previousElementSibling;
+            if (canvas.width > 0 && canvas.height > 0) {
+                canvas.saveSignature();
+            } else {
+                showNotification('Please draw a signature first!', 'error');
+            }
+        }
+
+        // Delete Row
+        function deleteRow(btn) {
+            if (confirm('Are you sure you want to delete this entry?')) {
+                btn.closest('tr').remove();
+                updateRowNumbers();
+                showNotification('Entry deleted successfully!', 'success');
+            }
+        }
+
+        // Update Row Numbers
+        function updateRowNumbers() {
+            const rows = document.querySelectorAll('#tableBody tr');
+            rows.forEach((row, index) => {
+                row.cells[0].textContent = index + 1;
+            });
+            count = rows.length;
+        }
+
+        // Set Default Date
+        function setDefaultDate(input) {
+            if (input) {
+                const today = new Date().toISOString().split('T')[0];
+                input.value = today;
+            }
+        }
+
+        // Export Data as CSV
+        function exportData() {
+            const table = document.querySelector('.entry-table');
+            let csv = [];
+            
+            // Headers
+            const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent.trim());
+            csv.push(headers.join(','));
+            
+            // Rows
+            const rows = table.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                const cells = Array.from(row.querySelectorAll('td')).slice(0, -2).map(td => {
+                    const input = td.querySelector('input, select');
+                    return `"${input ? input.value : td.textContent.trim()}"`;
+                });
+                csv.push(cells.join(','));
+            });
+            
+            const csvContent = csv.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `entry-register-${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+            
+            showNotification('Data exported successfully!', 'success');
+        }
+
+        // Print Table
+        function printTable() {
+            const table = document.querySelector('.entry-table').outerHTML;
+            const printWindow = window.open('', '', 'height=600,width=900');
+            
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Entry Register</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; padding: 20px; }
+                        h1 { text-align: center; color: #c40000; }
+                        table { width: 100%; border-collapse: collapse; }
+                        th, td { border: 1px solid #999; padding: 10px; text-align: center; }
+                        th { background: #f2f2f2; }
+                        canvas { border: 1px solid #333; }
+                    </style>
+                </head>
+                <body>
+                    <h1>ENTRY REGISTER WITH SIGNATURE</h1>
+                    <p>Date: ${new Date().toLocaleDateString()}</p>
+                    ${table}
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.print();
+            
+            showNotification('Print dialog opened!', 'info');
+        }
+
+        // Clear All Data
+        function clearAllData() {
+            if (confirm('Are you sure? This will delete all entries! This action cannot be undone.')) {
+                document.getElementById('tableBody').innerHTML = '';
+                count = 0;
+                showNotification('All data cleared!', 'success');
+            }
+        }
+
+        // Show Notification
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.innerHTML = `
+                <i class="fa fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'times-circle' : 'info-circle'}"></i>
+                <span>${message}</span>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            const style = document.createElement('style');
+            style.textContent = `
+                .notification {
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    padding: 16px 24px;
+                    border-radius: 8px;
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    font-size: 14px;
+                    font-weight: 600;
+                    z-index: 1001;
+                    opacity: 0;
+                    transform: translateX(400px);
+                    transition: all 0.3s ease;
+                }
+                
+                .notification-success {
+                    background: rgba(76, 175, 80, 0.9);
+                    color: white;
+                }
+                
+                .notification-info {
+                    background: rgba(33, 150, 243, 0.9);
+                    color: white;
+                }
+                
+                .notification-error {
+                    background: rgba(244, 67, 54, 0.9);
+                    color: white;
+                }
+                
+                .notification.show {
+                    opacity: 1;
+                    transform: translateX(0);
+                }
+            `;
+            
+            if (!document.querySelector('style[data-notif]')) {
+                document.head.appendChild(style);
+                style.setAttribute('data-notif', 'true');
+            }
+            
+            setTimeout(() => notification.classList.add('show'), 10);
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add sample row on load
+            // addRow();
+        });
+    </script>
+</body>
+</html>

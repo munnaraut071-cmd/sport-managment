@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Entry Register</title>
+
+<style>
+body{
+  font-family: Arial, sans-serif;
+  background:#ffffff;
+  color:#333;
+  padding:20px;
+}
+
+h2{
+  text-align:center;
+  color:#e50914;
+  letter-spacing:1px;
+}
+
+/* Table */
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:#fff;
+  box-shadow:0 0 10px rgba(0,0,0,0.1);
+}
+
+th{
+  background:#e50914;
+  color:white;
+  padding:10px;
+}
+
+td{
+  border:1px solid #ddd;
+  padding:8px;
+  text-align:center;
+}
+
+/* Input fields */
+input, select{
+  background:#fff;
+  color:#333;
+  border:1px solid #ccc;
+  padding:5px;
+}
+
+/* Canvas */
+canvas{
+  border:1px solid #999;
+  background:#fff;
+  cursor:crosshair;
+}
+
+/* Buttons */
+button{
+  background:#e50914;
+  color:white;
+  border:none;
+  padding:7px 12px;
+  cursor:pointer;
+  border-radius:4px;
+}
+
+button:hover{
+  background:#b20710;
+}
+
+/* S.No highlight */
+.serial{
+  color:#e50914;
+  font-weight:bold;
+  font-size:16px;
+}
+</style>
+</head>
+
+<body>
+
+<div style="margin-bottom: 20px;">
+  <a href="index.html" style="color: #e50914; text-decoration: none; font-weight: 600; font-size: 14px;">
+    &larr; Back to Home
+  </a>
+</div>
+
+<h2>ENTRY REGISTER</h2>
+
+<table>
+<thead>
+<tr>
+<th>S.No</th>
+<th>Name</th>
+<th>Type</th>
+<th>Roll / Emp Code</th>
+<th>Date</th>
+<th>In</th>
+<th>Out</th>
+<th>Signature</th>
+</tr>
+</thead>
+
+<tbody id="tableBody"></tbody>
+</table>
+
+<br>
+<button onclick="addRow()">Add Entry</button>
+
+<script>
+let count = 0;
+
+function addRow(){
+count++;
+
+let row = document.createElement("tr");
+
+row.innerHTML = `
+<td class="serial">${count}</td>
+<td><input></td>
+<td>
+<select>
+<option>Student</option>
+<option>Staff</option>
+</select>
+</td>
+<td><input></td>
+<td><input type="date"></td>
+<td><input type="time"></td>
+<td><input type="time"></td>
+<td>
+<canvas width="120" height="40"></canvas><br>
+<button onclick="clearSign(this)">Clear</button>
+</td>
+`;
+
+document.getElementById("tableBody").appendChild(row);
+enableSignature(row.querySelector("canvas"));
+}
+
+function enableSignature(canvas){
+let ctx = canvas.getContext("2d");
+let drawing = false;
+
+canvas.addEventListener("mousedown", () => drawing = true);
+canvas.addEventListener("mouseup", () => drawing = false);
+canvas.addEventListener("mouseleave", () => drawing = false);
+
+canvas.addEventListener("mousemove", function(e){
+if(!drawing) return;
+ctx.lineWidth = 2;
+ctx.lineCap = "round";
+ctx.lineTo(e.offsetX, e.offsetY);
+ctx.stroke();
+ctx.beginPath();
+ctx.moveTo(e.offsetX, e.offsetY);
+});
+}
+
+function clearSign(btn){
+let canvas = btn.previousElementSibling;
+canvas.getContext("2d").clearRect(0,0,canvas.width,canvas.height);
+}
+</script>
+
+</body>
+</html>

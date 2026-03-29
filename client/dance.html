@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dance Room - SPORTKITS</title>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <style>
+      .dance-hero{
+        height: 60vh;
+        background: url("https://images.unsplash.com/photo-1599880869912-25ba95ed5f10?ixlib=rb-4.0.3") center/cover no-repeat;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 40px;
+      }
+      .dance-hero .overlay{
+        position: absolute;
+        inset: 0;
+        background: rgba(0,0,0,0.65);
+      }
+      .dance-hero h1{
+        position: relative;
+        font-size: 56px;
+        color: #fff;
+        text-align: center;
+        font-weight: 900;
+      }
+      .dance-hero h1 span{ color: red; }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <header class="navbar">
+      <div class="logo">SPORT<span>KITS</span></div>
+
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="gym.html">Gym</a>
+        <a href="dance.html">Dance Room</a>
+      </nav>
+
+      <!-- Search & Icons -->
+      <div class="icons">
+        <div class="search-box" id="searchBox">
+          <button type="button" id="openSearch" class="icon-btn" aria-label="Open search" onclick="toggleSearch()">
+            <i class="fa fa-search" aria-hidden="true"></i>
+          </button>
+          <input type="text" id="searchInput" placeholder="Search kits..." />
+        </div>
+
+        <div class="bell-wrapper">
+          <button type="button" class="icon-btn bell-toggle" aria-label="Notifications" onclick="toggleBell()">
+            <i class="fa fa-bell" aria-hidden="true"></i>
+          </button>
+          <span class="bell-count" id="bellCount">2</span>
+          <div class="bell-box" id="bellBox">
+            <h4>Notification</h4>
+            <ul>
+              <li>💃 New Dance Props added</li>
+              <li>✅ Dance Studio available</li>
+            </ul>
+          </div>
+        </div>
+
+        <button class="login-btn" onclick="login()">
+          <i class="fa fa-sign-in-alt"></i> Login
+        </button>
+      </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="dance-hero">
+      <div class="overlay"></div>
+      <h1>Dance <span>Room</span></h1>
+    </section>
+
+    <!-- Dance Kits Section -->
+    <h2 id="danceKits" style="padding: 40px;">DANCE KITS & EQUIPMENT</h2>
+    <div class="carousel-container">
+      <button class="scroll-btn left" onclick="scrollLeft('danceCarousel')">&#10094;</button>
+      
+      <div class="carousel" id="danceCarousel">
+        <!-- Dance Shoes -->
+        <div class="kit-card">
+          <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?ixlib=rb-4.0.3" alt="Dance Shoes" />
+          <div class="content">
+            <a href="issue-return.html?kit=Dance Shoes" class="issue-btn" onclick="selectKit(2001, 'Dance Shoes')">
+              <i class="fa fa-arrow-right"></i> Dance Shoes
+            </a>
+          </div>
+        </div>
+
+        <!-- Dance Mat -->
+        <div class="kit-card">
+          <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3" alt="Dance Mat" />
+          <div class="content">
+            <a href="issue-return.html?kit=Dance Mat" class="issue-btn" onclick="selectKit(2002, 'Dance Mat')">
+              <i class="fa fa-arrow-right"></i> Dance Mat
+            </a>
+          </div>
+        </div>
+
+        <!-- Dance Costume -->
+        <div class="kit-card">
+          <img src="https://images.unsplash.com/photo-1595777707727-ac3d5c6a9e8f?ixlib=rb-4.0.3" alt="Dance Costume" />
+          <div class="content">
+            <a href="issue-return.html?kit=Dance Costume" class="issue-btn" onclick="selectKit(2003, 'Dance Costume')">
+              <i class="fa fa-arrow-right"></i> Costume
+            </a>
+          </div>
+        </div>
+
+        <!-- Leg Warmers -->
+        <div class="kit-card">
+          <img src="https://images.unsplash.com/photo-1506440773649-6e0eb8cfb237?ixlib=rb-4.0.3" alt="Leg Warmers" />
+          <div class="content">
+            <a href="issue-return.html?kit=Leg Warmers" class="issue-btn" onclick="selectKit(2004, 'Leg Warmers')">
+              <i class="fa fa-arrow-right"></i> Leg Warmers
+            </a>
+          </div>
+        </div>
+
+        <!-- Dance Bag -->
+        <div class="kit-card">
+          <img src="https://images.unsplash.com/photo-1553062407-98eeb64c6a62?ixlib=rb-4.0.3" alt="Dance Bag" />
+          <div class="content">
+            <a href="issue-return.html?kit=Dance Bag" class="issue-btn" onclick="selectKit(2005, 'Dance Bag')">
+              <i class="fa fa-arrow-right"></i> Dance Bag
+            </a>
+          </div>
+        </div>
+
+        <!-- Mirror Ball -->
+        <div class="kit-card">
+          <img src="https://images.unsplash.com/photo-1511379938547-c1f69b13d835?ixlib=rb-4.0.3" alt="Mirror Ball" />
+          <div class="content">
+            <a href="issue-return.html?kit=Mirror Ball" class="issue-btn" onclick="selectKit(2006, 'Mirror Ball')">
+              <i class="fa fa-arrow-right"></i> Mirror Ball
+            </a>
+          </div>
+        </div>
+
+        <!-- Dance Props -->
+        <div class="kit-card">
+          <img src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?ixlib=rb-4.0.3" alt="Dance Props" />
+          <div class="content">
+            <a href="issue-return.html?kit=Dance Props" class="issue-btn" onclick="selectKit(2007, 'Dance Props')">
+              <i class="fa fa-arrow-right"></i> Props
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <button class="scroll-btn right" onclick="scrollRight('danceCarousel')">&#10095;</button>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-container">
+        <div class="footer-box">
+          <h3>SPORT<span>KITS</span></h3>
+          <p>Sports Kits Management System for issuing, returning and managing sports equipment easily.</p>
+        </div>
+        <div class="footer-box">
+          <h3>Contact</h3>
+          <p><i class="fa fa-location-dot"></i> Dance Studio</p>
+          <p><i class="fa fa-phone"></i> +91 98765 43210</p>
+          <p><i class="fa fa-envelope"></i> dance@sportkits.com</p>
+        </div>
+        <div class="footer-box">
+          <h3>Follow Us</h3>
+          <div class="social-links">
+            <a href="#"><i class="fab fa-facebook-f"></i></a>
+            <a href="#"><i class="fab fa-instagram"></i></a>
+            <a href="#"><i class="fab fa-x-twitter"></i></a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© <span id="year"></span> SPORTKITS | All Rights Reserved</p>
+      </div>
+    </footer>
+
+    <script>
+      document.getElementById("year").innerText = new Date().getFullYear();
+
+      function scrollLeft(id) {
+        document.getElementById(id)?.scrollBy({ left: -300, behavior: "smooth" });
+      }
+
+      function scrollRight(id) {
+        document.getElementById(id)?.scrollBy({ left: 300, behavior: "smooth" });
+      }
+
+      function selectKit(id, name){
+        sessionStorage.setItem("kitCode", id);
+        sessionStorage.setItem("kitName", name);
+      }
+
+      function login(){
+        document.getElementById("loginmodal") ? 
+          (document.getElementById("loginmodal").style.display = "block") :
+          alert('Login Feature');
+      }
+
+      function toggleSearch(){
+        const box = document.getElementById("searchBox");
+        const input = document.getElementById("searchInput");
+        if(!box || !input) return;
+        box.classList.toggle("active");
+        if(box.classList.contains("active")){
+          input.focus();
+        } else {
+          input.value = "";
+          filterCards();
+        }
+      }
+
+      function toggleBell(){
+        const box = document.getElementById("bellBox");
+        const count = document.getElementById("bellCount");
+        const btn = document.querySelector('.bell-toggle');
+        if(!box) return;
+        const isOpen = box.style.display === "block";
+        if(isOpen){
+          box.style.display = "none";
+          if(btn) btn.setAttribute('aria-expanded', 'false');
+        } else {
+          box.style.display = "block";
+          if(count) count.style.display = "none";
+          if(btn) btn.setAttribute('aria-expanded', 'true');
+        }
+      }
+
+      window.addEventListener("click", function(e){
+        if(!e.target.closest(".bell-wrapper")){
+          const box = document.getElementById("bellBox");
+          if(box) box.style.display = "none";
+        }
+        if(!e.target.closest(".search-box")){
+          const box = document.getElementById("searchBox");
+          if(box) box.classList.remove("active");
+        }
+      });
+
+      document.addEventListener("keydown", e => {
+        if(e.key === "Escape") {
+          const box = document.getElementById("searchBox");
+          if(box) box.classList.remove("active");
+        }
+      });
+
+      const searchInput = document.getElementById("searchInput");
+      if(searchInput) searchInput.addEventListener("keyup", filterCards);
+
+      function filterCards(){
+        const input = document.getElementById("searchInput");
+        const val = (input && input.value ? input.value.toLowerCase() : "");
+        document.querySelectorAll(".kit-card").forEach(card => {
+          card.style.display = card.innerText.toLowerCase().includes(val) ? "block" : "none";
+        });
+      }
+    </script>
+</body>
+</html>

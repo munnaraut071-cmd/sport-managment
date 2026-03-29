@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI-Powered Sports Kit Management Dashboard</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="dashboard.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+    <script src="index.js"></script>
+  </head>
+  <body>
+    <!-- Navbar -->
+    <header class="navbar">
+      <div class="logo">SPORT<span>KITS</span></div>
+
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="dashboard.html" class="active">📊 AI Dashboard</a>
+        <a href="gym.html">Gym</a>
+        <a href="dance.html">Dance Room</a>
+        <a href="register_new.html">
+          <i class="fa fa-file-signature"></i> Entry Register
+        </a>
+      </nav>
+
+      <!-- Search & Icons -->
+      <div class="icons">
+        <div class="search-box" id="searchBox">
+          <button type="button" id="openSearch" class="icon-btn" aria-label="Open search" onclick="toggleSearch()">
+            <i class="fa fa-search" aria-hidden="true"></i>
+          </button>
+          <input type="text" id="searchInput" placeholder="Search kits..." />
+        </div>
+
+        <div class="bell-wrapper">
+          <button type="button" class="icon-btn bell-toggle" aria-label="Notifications" onclick="toggleBell()">
+            <i class="fa fa-bell" aria-hidden="true"></i>
+          </button>
+          <span class="bell-count" id="bellCount">3</span>
+          <div class="bell-box" id="bellBox">
+            <h4>Notification</h4>
+            <ul>
+              <li>🏏 New Cricket Kit added</li>
+              <li>🎽 Jersey returned</li>
+              <li>⚠️ 2 Kits pending return</li>
+            </ul>
+          </div>
+        </div>
+
+        <button class="login-btn" onclick="login()">
+          <i class="fa fa-sign-in-alt"></i> Login
+        </button>
+      </div>
+    </header>
+
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+      <h1>AI-Powered Sports Kit Management</h1>
+    </div>
+
+    <!-- Dashboard Container -->
+    <div class="container">
+
+      <!-- Demand Forecast -->
+      <div class="card">
+        <div class="card-header green">
+          <i class="fa fa-chart-line"></i> Demand Forecasting
+        </div>
+        <div class="card-body">
+          <div class="chart" id="forecast">📈 HIGH DEMAND</div>
+          <p class="card-desc">AI predicts which kits will be in high demand before tournaments/seasons.</p>
+          <hr class="divider">
+          <p id="forecastText"></p>
+          <hr class="divider">
+          <div class="alert" id="alertBox"></div>
+        </div>
+      </div>
+
+      <!-- Recommendation -->
+      <div class="card">
+        <div class="card-header orange">
+          <i class="fa fa-shopping-cart"></i> Purchase Recommendations
+        </div>
+        <div class="card-body">
+          <p class="card-desc">Suggests what new kits to buy based on demand trends.</p>
+          <hr class="divider">
+          <div id="recommendation"></div>
+        </div>
+      </div>
+
+      <!-- Reminder -->
+      <div class="card">
+        <div class="card-header red">
+          <i class="fa fa-bell"></i> Smart Return Reminders
+        </div>
+        <div class="card-body">
+          <p class="card-desc">AI learns each student's return behavior pattern and sends smart reminders.</p>
+          <hr class="divider">
+          <div class="alert" id="reminder"></div>
+        </div>
+      </div>
+
+      <!-- Trend -->
+      <div class="card">
+        <div class="card-header blue">
+          <i class="fa fa-chart-bar"></i> Trend Analysis & Insights
+        </div>
+        <div class="card-body">
+          <div class="chart" id="trend">📊 TRENDS</div>
+          <p class="card-desc">Analyzes academic calendar, sports events & historical patterns.</p>
+          <hr class="divider">
+          <p id="trendText"></p>
+          <hr class="divider">
+          <h4 id="insight"></h4>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Dashboard Footer -->
+    <div class="dashboard-footer">
+      <p>Optimizing Inventory & Planning with AI Intelligence</p>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginmodal" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="closelogin()">&times;</span>
+        <h2>Login</h2>
+        <input type="email" placeholder="Email" />
+        <input type="password" placeholder="Password" />
+        <button onclick="alert('Login functionality - integrate with backend')">Login</button>
+      </div>
+    </div>
+
+    <script src="index.js"></script>
+  </body>
+</html>

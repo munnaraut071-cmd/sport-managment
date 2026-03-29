@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Snooker & Pool Register</title>
+
+<style>
+body{
+  font-family: Arial;
+  background:#f4f4f4;
+  padding:20px;
+}
+
+h2{
+  text-align:center;
+  color:#c40000;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:white;
+}
+
+th, td{
+  border:1px solid #999;
+  padding:8px;
+  text-align:center;
+}
+
+th{
+  background:#e50914;
+  color:white;
+}
+
+.form-box{
+  margin-bottom:15px;
+  text-align:center;
+}
+
+input, select{
+  padding:6px;
+  margin:4px;
+}
+
+button{
+  padding:6px 12px;
+  background:#e50914;
+  color:white;
+  border:none;
+  cursor:pointer;
+}
+
+.delete-btn{
+  background:#d9534f;
+  padding:4px 8px;
+  font-size:12px;
+}
+
+.delete-btn:hover{
+  background:#c9302c;
+}
+</style>
+</head>
+
+<body>
+
+<h2>RECORDS OF USE OF SNOOKER & POOL TABLE</h2>
+
+<div class="form-box">
+<input id="name" placeholder="Name">
+<input id="roll" placeholder="Roll No">
+<select id="game">
+<option>Snooker</option>
+<option>Pool</option>
+</select>
+<input id="receipt" placeholder="Receipt No">
+<input id="date" type="date">
+<input id="time" type="time">
+<input id="amount" placeholder="Amount">
+<button onclick="addRow()">Add Record</button>
+</div>
+
+<table>
+<thead>
+<tr>
+<th>S.No</th>
+<th>Name</th>
+<th>Roll No</th>
+<th>Snooker / Pool</th>
+<th>Receipt No</th>
+<th>Date</th>
+<th>Time</th>
+<th>Amount</th>
+<th>Action</th>
+</tr>
+</thead>
+
+<tbody id="tableBody"></tbody>
+</table>
+
+<script>
+let count = 0;
+
+function addRow(){
+let name = document.getElementById("name").value;
+let roll = document.getElementById("roll").value;
+let game = document.getElementById("game").value;
+let receipt = document.getElementById("receipt").value;
+let date = document.getElementById("date").value;
+let time = document.getElementById("time").value;
+let amount = document.getElementById("amount").value;
+
+// Validation
+if(name == "" || roll == "" || receipt == "" || date == "" || time == "" || amount == ""){
+  alert("Please fill in all fields");
+  return;
+}
+
+count++;
+
+let row = `
+<tr>
+<td>${count}</td>
+<td>${name}</td>
+<td>${roll}</td>
+<td>${game}</td>
+<td>${receipt}</td>
+<td>${date}</td>
+<td>${time}</td>
+<td>${amount}</td>
+<td><button class="delete-btn" onclick="deleteRow(this)">Delete</button></td>
+</tr>
+`;
+
+document.getElementById("tableBody").innerHTML += row;
+
+// Clear input fields
+document.getElementById("name").value = "";
+document.getElementById("roll").value = "";
+document.getElementById("game").value = "Snooker";
+document.getElementById("receipt").value = "";
+document.getElementById("date").value = "";
+document.getElementById("time").value = "";
+document.getElementById("amount").value = "";
+}
+
+function deleteRow(btn){
+btn.closest("tr").remove();
+updateSerialNumbers();
+}
+
+function updateSerialNumbers(){
+let rows = document.getElementById("tableBody").getElementsByTagName("tr");
+for(let i = 0; i < rows.length; i++){
+  rows[i].cells[0].textContent = i + 1;
+}
+count = rows.length;
+}
+</script>
+
+</body>
+</html>

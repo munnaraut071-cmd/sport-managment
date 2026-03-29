@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Notification Bell</title>
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+body{
+  background:#111;
+  color:white;
+  padding:50px;
+  font-family:Arial;
+}
+
+/* Bell container */
+.bell-box{
+  position: relative;
+  display: inline-block;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+/* Bell icon */
+.bell-box i{
+  color: white;
+  transition: 0.3s;
+}
+
+.bell-box i:hover{
+  color: #ff3c00;
+}
+
+/* Notification count */
+.badge{
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  background: red;
+  color: white;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 50%;
+}
+
+/* Dropdown box */
+.noti-box{
+  display: none;
+  position: absolute;
+  top: 35px;
+  right: 0;
+  background: #222;
+  width: 220px;
+  border-radius: 8px;
+  box-shadow: 0 0 15px black;
+  padding: 10px;
+}
+
+.noti-box p{
+  font-size: 14px;
+  padding: 8px;
+  border-bottom: 1px solid #333;
+}
+
+.noti-box p:last-child{
+  border-bottom: none;
+}
+
+/* Show dropdown */
+.noti-box.show{
+  display: block;
+}
+</style>
+</head>
+
+<body>
+
+<!-- Bell -->
+<div class="bell-box" onclick="toggleNoti()">
+  <i class="fa fa-bell"></i>
+  <span class="badge">3</span>
+
+  <div id="noti" class="noti-box">
+    <p>🏋️ New Gym Member Joined</p>
+    <p>💳 Payment Received</p>
+    <p>📅 New Workout Plan Added</p>
+  </div>
+</div>
+
+<script>
+function toggleNoti(){
+  document.getElementById("noti").classList.toggle("show");
+}
+</script>
+
+</body>
+</html>

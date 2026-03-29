@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Gym Join & Payment</title>
+
+<style>
+*{
+  box-sizing: border-box;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+body{
+  margin:0;
+  height:100vh;
+  background:#0a0a0a;
+  background-size:cover;
+  background-position: left;
+  display:flex;
+  justify-content:flex-start;
+  align-items:center;
+  color:#fff;
+}
+
+.form-container{
+  background:#111;
+  color:#fff;
+  width:360px;
+  padding:20px;
+  border-radius: 12px;
+  box-shadow: 0 0 25px black;
+  max-width: 400px;
+  /* pin form to top-left */
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1100;
+}
+
+.container h2{
+  text-align:center;
+  color:#ff3c00;
+  margin-bottom:20px;
+}
+
+label{
+  font-size:14px;
+  margin-top:10px;
+  display:block;
+  color:#ff9b7a;
+}
+
+input, select{
+  width:100%;
+  padding:10px;
+  margin-top:5px;
+  border:none;
+  border-radius:6px;
+  font-size:14px;
+}
+
+input[readonly]{
+  background:#eee;
+}
+
+button{
+  width:100%;
+  margin-top:20px;
+  padding:12px;
+  background:#ff3c00;
+  border:none;
+  color:white;
+  font-size:16px;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+button:hover{
+  background:#e63600;
+}
+
+#successMsg{
+  margin-top:15px;
+  text-align:center;
+  color:#00ff7f;
+  font-weight:bold;
+}
+/* Dashboard Container */
+.container {
+  background: #1a1a1a;
+  color: #fff;
+  width: auto;
+  max-width: calc(100% - 440px);
+  min-width: 500px;
+  height: 80vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 30px;
+  margin: 0;
+  border-radius: 12px;
+  box-shadow: 0 0 25px rgba(255,60,0,0.1);
+  font-family: Arial, Helvetica, sans-serif;
+  flex-direction: column;
+  position: fixed;
+  top: 20px;
+  /* left boundary sits after the fixed form (form width 360px + gap 40px) */
+  left: calc(380px + 20px);
+  right: 20px;
+  z-index: 1000;
+  border: 1px solid rgba(255,60,0,0.15);
+}
+
+/* Heading */
+.container h2 {
+  text-align: center;
+  color: #ff3c00;
+  margin-bottom: 20px;
+}
+
+/* Table Styling */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+thead {
+  background-color: #ff3c00;
+}
+
+thead th {
+  color: #fff;
+  padding: 12px;
+  font-weight: bold;
+  background: linear-gradient(135deg, #ff3c00 0%, #ff5500 100%);
+}
+
+tbody td {
+  padding: 12px 8px;
+  text-align: center;
+  border-bottom: 1px solid #333;
+  font-size: 13px;
+}
+
+/* nicer table visuals */
+table thead th{
+  position: sticky;
+  top: 0;
+  background: linear-gradient(135deg, #ff3c00 0%, #ff5500 100%);
+  color: #fff;
+  padding: 12px;
+  text-transform: uppercase;
+  font-size: 13px;
+  letter-spacing: 0.6px;
+}
+
+tbody tr:nth-child(odd){ background: rgba(255,255,255,0.02); }
+tbody tr:nth-child(even){ background: rgba(0,0,0,0.2); }
+tbody tr:hover{ background: rgba(255,60,0,0.12); }
+
+.status-badge{ display:inline-block; padding:6px 10px; border-radius:999px; font-weight:700; font-size:13px; }
+.status-badge.active{ background: rgba(34,197,94,0.12); color:#22c55e; border:1px solid rgba(34,197,94,0.18); }
+.status-badge.inactive{ background: rgba(220,38,38,0.08); color:#ef4444; border:1px solid rgba(220,38,38,0.12); }
+
+.action-btn{ margin:0 6px; padding:6px 10px; font-size:13px; border-radius:8px; background:#222; color:#fff; border:1px solid rgba(255,255,255,0.04); cursor:pointer; }
+.action-btn.remove{ background:transparent; color:#ff6b6b; border-color:rgba(255,100,100,0.08); }
+.action-btn:hover{ transform:translateY(-2px); }
+
+/* Row hover effect */
+tbody tr:hover {
+  background-color: rgba(255, 60, 0, 0.2);
+}
+
+/* Responsive table for small screens */
+@media screen and (max-width: 768px) {
+  table, thead, tbody, th, td, tr {
+    display: block;
+  }
+
+  thead tr {
+    display: none;
+  }
+
+  tbody tr {
+    margin-bottom: 15px;
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 10px;
+  }
+
+  tbody td {
+    text-align: left;
+    padding: 6px 10px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  tbody td::before {
+    content: attr(data-label);
+    font-weight: bold;
+    color: #ff9b7a;
+  }
+}
+
+</style>
+
+</head>
+<body>
+
+<div class="form-container">
+  <h2>Join Gym Membership</h2>
+
+  <form id="paymentForm">
+    <label>Full Name</label>
+    <input id="fullName" name="fullName" type="text" required placeholder="Enter your name">
+
+    <label>Email</label>
+    <input id="email" name="email" type="email" required placeholder="Enter email">
+
+    <label>Mobile Number</label>
+    <input id="mobile" name="mobile" type="tel" required placeholder="Enter mobile number">
+
+    <label>Select Plan</label>
+    <select id="plan" onchange="updateAmount()" required>
+      <option value="">Choose Plan</option>
+      <option value="1000">1 Month - ₹1000</option>
+      <option value="2500">3 Months - ₹2500</option>
+      <option value="4500">6 Months - ₹4500</option>
+      <option value="8000">12 Months - ₹8000</option>
+    </select>
+
+    <label>Amount (₹)</label>
+    <input type="text" id="amount" readonly>
+
+    <label>Payment Method</label>
+    <select id="paymentMethod" name="paymentMethod" required>
+      <option value="UPI">UPI</option>
+      <option value="Debit Card">Debit Card</option>
+      <option value="Credit Card">Credit Card</option>
+      <option value="Cash">Cash</option>
+    </select>
+
+    <button type="submit">Pay & Join</button>
+  </form>
+
+  <div id="successMsg"></div>
+</div>
+<!-- Dashboard Table -->
+<div class="container">
+  <h2>Gym Member Dashboard</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Full Name</th>
+        <th>Email</th>
+        <th>Mobile</th>
+        <th>Plan</th>
+        <th>Amount(₹)</th>
+        <th>Payment Method</th>
+        <th>Join Date</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="table"></tbody>
+  </table>
+</div>
+
+<script>
+const MEMBERS_KEY = 'gymMembers';
+
+function updateAmount(){
+  document.getElementById("amount").value =
+    document.getElementById("plan").value;
+}
+
+function getMembers(){
+  try{ return JSON.parse(localStorage.getItem(MEMBERS_KEY) || '[]'); }
+  catch{ return []; }
+}
+
+function saveMembers(list){
+  localStorage.setItem(MEMBERS_KEY, JSON.stringify(list));
+}
+
+function escapeHtml(str){
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function renderMembers(){
+  const tbody = document.getElementById('table');
+  if(!tbody) return;
+  const list = getMembers();
+  tbody.innerHTML = '';
+  list.forEach(m => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(m.name)}</td>
+      <td>${escapeHtml(m.email)}</td>
+      <td>${escapeHtml(m.mobile)}</td>
+      <td>${escapeHtml(m.plan)}</td>
+      <td>${escapeHtml(m.amount)}</td>
+      <td>${escapeHtml(m.paymentMethod)}</td>
+      <td>${escapeHtml(m.joinDate)}</td>
+      <td><span class="status-badge ${m.status === 'Active' ? 'active' : 'inactive'}">${escapeHtml(m.status)}</span></td>
+      <td>
+        <button class="action-btn" onclick="toggleStatus(${list.indexOf(m)})">${m.status === 'Active' ? 'Deactivate' : 'Activate'}</button>
+        <button class="action-btn remove" onclick="removeMember(${list.indexOf(m)})">Remove</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function toggleStatus(idx){
+  const members = getMembers();
+  if(!members[idx]) return;
+  members[idx].status = members[idx].status === 'Active' ? 'Inactive' : 'Active';
+  saveMembers(members);
+  renderMembers();
+}
+
+function removeMember(idx){
+  const members = getMembers();
+  if(!members[idx]) return;
+  members.splice(idx,1);
+  saveMembers(members);
+  renderMembers();
+}
+
+document.getElementById("paymentForm").addEventListener("submit", function(e){
+  e.preventDefault();
+  const name = document.getElementById('fullName').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const mobile = document.getElementById('mobile').value.trim();
+  const planEl = document.getElementById('plan');
+  const plan = planEl && planEl.options[planEl.selectedIndex] ? planEl.options[planEl.selectedIndex].text : '';
+  const amount = document.getElementById('amount').value || (planEl ? planEl.value : '');
+  const paymentMethod = document.getElementById('paymentMethod').value || '';
+
+  if(!name || !email || !mobile || !planEl || !planEl.value){
+    document.getElementById('successMsg').innerText = 'Please complete all required fields.';
+    return;
+  }
+
+  const member = {
+    name, email, mobile, plan, amount, paymentMethod,
+    joinDate: new Date().toLocaleDateString(),
+    status: 'Active'
+  };
+
+  const members = getMembers();
+  members.push(member);
+  saveMembers(members);
+  renderMembers();
+
+  document.getElementById('successMsg').innerHTML = '✅ Payment Successful! Welcome to the Gym 💪';
+  // reset form but keep UI stable
+  this.reset();
+  document.getElementById('amount').value = '';
+});
+
+// render saved members on load
+document.addEventListener('DOMContentLoaded', renderMembers);
+</script>
+
+</body>
+</html>

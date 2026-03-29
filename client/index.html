@@ -1,0 +1,703 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>SPORTKITS</title>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+      <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="dashboard.css">
+    <script src="index.js"></script>
+    <link rel="stylesheet" href="dashboard.css">
+  </head>
+  <body>
+    <!-- Navbar -->
+    <header class="navbar">
+      <div class="logo">SPORT<span>KITS</span></div>
+
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="dashboard.html">📊 AI Dashboard</a>
+        <a href="gym.html">Gym</a>
+        <a href="dance.html">Dance Room</a>
+        <a href="register_new.html">
+          <i class="fa fa-file-signature"></i> Entry Register
+        </a>
+      </nav>
+
+      <!-- Search & Icons -->
+      <div class="icons">
+        <div class="search-box" id="searchBox">
+          <button type="button" id="openSearch" class="icon-btn" aria-label="Open search" onclick="toggleSearch()">
+            <i class="fa fa-search" aria-hidden="true"></i>
+          </button>
+          <input type="text" id="searchInput" placeholder="Search kits..." />
+          <!-- close button removed per request -->
+        </div>
+        <!-- Bell-box -->
+
+          <div class="bell-wrapper">
+          <button type="button" class="icon-btn bell-toggle" aria-label="Notifications" onclick="toggleBell()">
+            <i class="fa fa-bell" aria-hidden="true"></i>
+          </button>
+          <span class="bell-count" id="bellCount">3</span>
+          <div class="bell-box" id="bellBox">
+            <h4>Notification</h4>
+            <ul>
+              <li>🏏 New Cricket Kit added</li>
+             <li>🎽 Jersey returned</li>
+             <li>⚠️ 2 Kits pending return</li>
+
+              
+            </ul>
+            </div>
+           
+          </div>
+
+
+          <button class="login-btn" onclick="login()">
+            <i class="fa fa-sign-in-alt"></i> Login
+          </button>
+        
+      </div>
+    </header>
+
+    <!-- Hero Section (Netflix Style) -->
+    <section class="hero">
+      <div class="hero-background">
+        <img src="https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=1200&h=600&fit=crop" alt="Cricket Background" />
+        <div class="hero-overlay"></div>
+      </div>
+      
+      <div class="hero-content">
+        <h1 class="hero-title">🏏 SPORTKITS</h1>
+
+        <p class="hero-subtitle">Professional Sports Equipment Management System</p>
+        
+        <p class="hero-desc">Manage, track, and reserve sports kits with AI-powered predictions. Get smart recommendations on equipment demand and optimize your inventory with intelligent forecasting.</p>
+        <div class="hero-buttons">
+          <button class="btn btn-play" onclick="playVideo()">
+            <i class="fa fa-play"></i> Watch Demo
+          </button>
+          <a href="dashboard.html" class="btn btn-info">
+            <i class="fa fa-chart-line"></i> View Analytics
+          </a>
+        </div>
+      </div>
+    </section>
+    
+
+    <!-- Bottom Note -->
+    <div class="note"><span>Chitkara University</span>, Himachal Pradesh</div>
+
+    <!-- AI-Powered Section Header -->
+    <div class="ai-section-header">
+      <h2>🤖 AI-Powered Sports Kit Management</h2>
+      <p>Intelligent forecasting, smart recommendations, and automated inventory optimization</p>
+    </div>
+
+    <!-- ================= CRICKET KITS ================= -->
+    <h2 id="gymkits">CRICKET KITS</h2>
+    <div class="carousel-container">
+      <button class="scroll-btn left" onclick="scrollLeft('carousel1')">
+        &#10094;
+      </button>
+      <div class="carousel" id="carousel1">
+        <!-- Bats -->
+        <div class="kit-card">
+          <img
+            src="https://cpimg.tistatic.com/10346057/b/4/Sixhitters-Double-Blade-Tennis-Bat.jpg"
+            alt="Bats"
+          />
+          <div class="content">
+            <a href="issue-return.html?kit=Cricket Bat" class="issue-btn" onclick="selectKit(1234, 'Cricket Bat')">
+              <i class="fa fa-arrow-right"></i> Bats
+            </a>
+          </div>
+        </div>
+        <!-- Balls -->
+        <div class="kit-card">
+          <img
+            src="https://external-preview.redd.it/crictracker-article-types-of-balls-used-in-international-v0-EpEy0DoDGhRh6NnRtXEl58D38JynnokR2sJtGKwhFt0.jpg?auto=webp&s=14fff5877bbbfff562486961ab411e61a5aa1bf1"
+            alt="Balls"
+          />
+          <div class="content">
+            <a href="issue-return.html?kit=Cricket Balls" class="issue-btn" onclick="selectKit(1235, 'Cricket Balls')">
+              <i class="fa fa-arrow-right"></i> Balls
+            </a>
+          </div>
+        </div>
+        <!-- Pads -->
+        <div class="kit-card">
+          <img
+            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRtds2y0d1i8JFG8RSyQe1BW75QIR0JPZnQUQ&s"
+            alt="Pads"
+          />
+          <div class="content">
+            <a href="issue-return.html?kit=Cricket Pads" class="issue-btn" onclick="selectKit(1236, 'Cricket Pads')">
+              <i class="fa fa-arrow-right"></i> Pads
+            </a>
+          </div>
+        </div>
+        <!-- Helmets -->
+        <div class="kit-card">
+          <img
+            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcROFxQOwLB8Lhv-z33PzSlxnciPRoqdw6VN8Q&s"
+            alt="Helmets"
+          />
+          <div class="content">
+            <a href="issue-return.html?kit=Cricket Helmets" class="issue-btn" onclick="selectKit(1237, 'Cricket Helmets')">
+              <i class="fa fa-arrow-right"></i>Helmets
+            </a>
+          </div>
+        </div>
+        <!-- Gloves -->
+        <div class="kit-card">
+          <img
+            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSfktzNGKyUKI5tJxu6Qg_FX1OMoUwtkGzt3A&s"
+            alt="Gloves"
+          />
+          <div class="content">
+            <a href="issue-return.html?kit=Cricket Gloves" class="issue-btn" onclick="selectKit(1238, 'Cricket Gloves')">
+              <i class="fa fa-arrow-right"></i>Gloves
+            </a>
+          </div>
+        </div>
+        <!-- Inner Gloves -->
+        <div class="kit-card">
+          <img
+            src="https://prokicksports.com/cdn/shop/products/ac_2f82b5b6-d806-4a14-b7d0-1915564e644d.jpg?v=1644488686"
+            alt="Inner Gloves"
+          />
+          <div class="content">
+            <a href="issue-return.html?kit=Cricket Inner Gloves" class="issue-btn" onclick="selectKit(1239, 'Cricket Inner Gloves')">
+              <i class="fa fa-arrow-right"></i>Inner Gloves
+            </a>
+          </div>
+        </div>
+        <!-- Wicket-keeping gloves -->
+        <div class="kit-card">
+          <img
+            src="https://5.imimg.com/data5/OR/GL/RN/SELLER-4931499/ss-professional-wicket-keeping-gloves.png"
+            alt="Wicket-keeping gloves"
+          />
+          <div class="content">
+            <a href="issue-return.html?kit=Cricket Wicket-keeping gloves" class="issue-btn" onclick="selectKit(1240, 'Cricket Wicket-keeping gloves')">
+              <i class="fa fa-arrow-right"></i>Wicket-keeping gloves
+            </a>
+          </div>
+        </div>
+        <!-- Arm guard -->
+        <div class="kit-card">
+          <img
+            src="https://nwscdn.com/media/catalog/product/a/d/adult-arm-guard-main.jpg?odnHeight=117&odnWidth=117&odnBg=FFFFFF"
+            alt="Inner Gloves"
+          />
+          <div class="content">
+            <a href="issue-return.html?kit=Cricket Arm guard" class="issue-btn" onclick="selectKit(1241, 'Cricket Arm guard')">
+              <i class="fa fa-arrow-right"></i>Arm guard
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <button class="scroll-btn right" onclick="scrollRight('carousel1')">
+        &#10095;
+      </button>
+    </div>
+    <!-- ================= BADMINTON KITS ================= -->
+    <h2 id="badmintonkits">BADMINTON KITS</h2>
+
+    <div class="carousel-container">
+      <!-- Left Scroll Button -->
+      <button class="scroll-btn left" onclick="scrollLeft('carousel3')">
+        &#10094;
+      </button>
+
+      <!-- Carousel -->
+      <div class="carousel" id="carousel3">
+        <!-- Racket -->
+        <div class="kit-card">
+          <img
+            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSegxdpCM_zGtBi7SRbWaNPkW79atfUIHsC-A&s"
+            alt="Badminton Racket"
+          />
+          <div class="content">
+            <a href="issue-return.html?kit=Badminton Racket" class="issue-btn" onclick="selectKit(1242, 'Badminton Racket')">
+              <i class="fa fa-arrow-right"></i> Racket
+            </a>
+          </div>
+        </div>
+
+        <!-- Shuttlecocks -->
+        <div class="kit-card">
+          <img
+            src="https://upload.wikimedia.org/wikipedia/commons/d/d0/Shuttlecocks_Yonex_Aerosensa_20.jpg"
+            alt="Shuttlecocks"
+          />
+          <div class="content">
+            <a href="issue-return.html?kit=Shuttlecocks" class="issue-btn" onclick="selectKit(1243, 'Shuttlecocks')">
+              <i class="fa fa-arrow-right"></i> Shuttlecocks
+            </a>
+          </div>
+        </div>
+
+        <!-- Grip -->
+        <div class="kit-card">
+          <img
+            src="https://badminton-racket-review.com/cdn/shop/articles/99808c5dff5923a79fb301fa5ea6d1d3.jpg?v=1607103623"
+            alt="Badminton Grip"
+          />
+          <div class="content">
+            <a href="issue-return.html?kit=Badminton Grip" class="issue-btn" onclick="selectKit(1244, 'Badminton Grip')">
+              <i class="fa fa-arrow-right"></i> Grip
+            </a>
+          </div>
+        </div>
+
+        <!-- Shoes -->
+        <div class="kit-card">
+          <img
+            src="https://www.jiomart.com/images/product/original/rvd26dbki8/ase-2-0-non-marking-rubber-sole-badminton-shoes-ideal-for-badminton-table-tennis-volleyball-product-images-rvd26dbki8-0-202210270051.jpg?im=Resize=(500,630)"
+            alt="Badminton Shoes"
+          />
+          <div class="content">
+            <a href="issue-return.html?kit=Badminton Shoes" class="issue-btn" onclick="selectKit(1245, 'Badminton Shoes')">
+              <i class="fa fa-arrow-right"></i> Shoes
+            </a>
+          </div>
+        </div>
+
+        <!-- Net -->
+        <div class="kit-card">
+          <img
+            src="https://cpimg.tistatic.com/8649321/b/4/badminton-pole-net.jpg"
+            alt="Badminton Net"
+          />
+          <div class="content">
+            <a href="issue-return.html?kit=Badminton Net" class="issue-btn" onclick="selectKit(1246, 'Badminton Net')">
+              <i class="fa fa-arrow-right"></i> Net
+            </a>
+          </div>
+        </div>
+
+        <!-- Wristbands (NEW) -->
+        <div class="kit-card">
+          <img
+            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTfvm74JENin-b1wil4Gq8cElkeMYrvMWfL7w&s"
+            alt="Badminton Wristbands"
+          />
+          <div class="content">
+            <a
+              href="issue-return.html?kit=Badminton Wristbands"
+              class="issue-btn" onclick="selectKit(1247, 'Badminton Wristbands')"
+            >
+              <i class="fa fa-arrow-right"></i> Wristbands
+            </a>
+          </div>
+        </div>
+
+        <!-- Kit Bag (NEW) -->
+        <div class="kit-card">
+          <img
+            src="https://m.media-amazon.com/images/I/91marzNd0DL.jpg"
+            alt="Badminton Kit Bag"
+          />
+          <div class="content">
+            <a href="issue-return.html?kit=Badminton Kit Bag" class="issue-btn" onclick="selectKit(1248, 'Badminton Kit Bag')">
+              <i class="fa fa-arrow-right"></i> Kit Bag
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Scroll Button -->
+      <button class="scroll-btn right" onclick="scrollRight('carousel3')">
+        &#10095;
+      </button>
+    </div>
+
+    <!-- ================= TABLE TENNIS KITS ================= -->
+    <h2 id="tabletennis">TABLE TENNIS KITS</h2>
+
+    <div class="carousel-container">
+      <button class="scroll-btn left" onclick="scrollLeft('carouselTT')">
+        &#10094;
+      </button>
+
+      <div class="carousel" id="carouselTT">
+        <!-- Racket -->
+        <div class="kit-card">
+          <img
+            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR_5oLZBfjyar7iMTShH3qnQSwJK4lvB8o1hQ&s"
+            alt="Table Tennis Racket"
+          />
+          <div class="content">
+            <a
+              href="issue-return.html?kit=Table Tennis Racket"
+              class="issue-btn" onclick="selectKit(1249, 'Table Tennis Racket')"
+            >
+              <i class="fa fa-arrow-right"></i> Racket
+            </a>
+          </div>
+        </div>
+
+        <!-- Balls -->
+        <div class="kit-card">
+          <img
+            src="https://m.media-amazon.com/images/I/51H1ksGQlFL._AC_UF894,1000_QL80_.jpg"
+            alt="Table Tennis Balls"
+          />
+          <div class="content">
+            <a
+              href="issue-return.html?kit=Table Tennis Balls"
+              class="issue-btn" onclick="selectKit(1250, 'Table Tennis Balls')"
+            >
+              <i class="fa fa-arrow-right"></i> Balls
+            </a>
+          </div>
+        </div>
+
+        <!-- Net -->
+        <div class="kit-card">
+          <img
+            src="https://static.vecteezy.com/system/resources/thumbnails/029/934/940/small/closeup-white-table-tennis-ball-and-a-black-net-photo.jpg"
+            alt="Table Tennis Net"
+          />
+          <div class="content">
+            <a href="issue-return.html?kit=Table Tennis Net" class="issue-btn" onclick="selectKit(1251, 'Table Tennis Net')">
+              <i class="fa fa-arrow-right"></i> Net
+            </a>
+          </div>
+        </div>
+
+        <!-- Table (NEW) -->
+        <div class="kit-card">
+          <img
+            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSaj2ACaIubPAVFafJnkq_Gv7cey0Fe5OsrhQ&s"
+            alt="Table Tennis Table"
+          />
+          <div class="content">
+            <a
+              href="issue-return.html?kit=Table Tennis Table"
+              class="issue-btn" onclick="selectKit(1252, 'Table Tennis Table')"
+            >
+              <i class="fa fa-arrow-right"></i> Table
+            </a>
+          </div>
+        </div>
+
+        <!-- Shoes (NEW) -->
+        <div class="kit-card">
+          <img
+            src="https://tenniscompanion.org/wp-content/uploads/2024/10/getting-to-know-the-types-of-tennis-shoes-buyers-guide.jpg"
+            alt="Table Tennis Shoes"
+          />
+          <div class="content">
+            <a
+              href="issue-return.html?kit=Table Tennis Shoes"
+              class="issue-btn" onclick="selectKit(1253, 'Table Tennis Shoes')"
+            >
+              <i class="fa fa-arrow-right"></i> Shoes
+            </a>
+          </div>
+        </div>
+
+        <!-- Bat Cover (NEW) -->
+        <div class="kit-card">
+          <img
+            src="https://m.media-amazon.com/images/I/819togiDPZL.jpg"
+            alt="Bat Cover"
+          />
+          <div class="content">
+            <a
+              href="issue-return.html?kit=Table Tennis Bat Cover"
+              class="issue-btn" onclick="selectKit(1254, 'Table Tennis Bat Cover')"
+            >
+              <i class="fa fa-arrow-right"></i> Bat Cover
+            </a>
+          </div>
+        </div>
+
+        <!-- Score Board (NEW) -->
+        <div class="kit-card">
+          <img
+            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRlWbsolt4FsrJpzZ8jQkStoKr2-zJSbOd3lQ&s"
+            alt="Score Board"
+          />
+          <div class="content">
+            <a
+              href="issue-return.html?kit=Table Tennis Score Board"
+              class="issue-btn\" onclick="selectKit(1255, 'Table Tennis Score Board')"
+            >
+              <i class="fa fa-arrow-right"></i> Score Board
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <button class="scroll-btn right" onclick="scrollRight('carouselTT')">
+        &#10095;
+      </button>
+    </div>
+
+    <!-- ================= FOOTBALL KITS ================= -->
+    <h2>FOOTBALL KITS</h2>
+    <div class="carousel-container">
+      <button class="scroll-btn left" onclick="scrollLeft('carousel2')">
+        &#10094;
+      </button>
+
+      <div class="carousel" id="carousel2">
+        <!-- Football -->
+        <div class="kit-card">
+          <img
+            src="https://img.freepik.com/free-vector/vector-isolated-realistic-soccer-ball-white_1284-41932.jpg"
+            alt="Football"
+          />
+          <div class="content">
+            <a href="issue-return.html?kit=Football" class="issue-btn" onclick="selectKit(2001, 'Football')">
+              <i class="fa fa-arrow-right"></i> Football
+            </a>
+          </div>
+        </div>
+
+        <!-- Jersey -->
+        <div class="kit-card">
+          <img
+            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSiR0UxVzGAbbVIQ1fQeqt44OkNm5JeMSw_Iw&s"
+            alt="Jersey"
+          />
+          <div class="content">
+            <a href="issue-return.html?kit=Football Jersey" class="issue-btn" onclick="selectKit(2002, 'Football Jersey')">
+              <i class="fa fa-arrow-right"></i> Jersey
+            </a>
+          </div>
+        </div>
+
+        <!-- Goalposts -->
+        <div class="kit-card">
+          <img
+            src="https://gisco.in/wp-content/uploads/2024/06/Pg-50.jpg"
+            alt="Goalposts &amp; Nets"
+          />
+          <div class="content">
+            <a href="issue-return.html?kit=Goalposts%20%26%20Nets" class="issue-btn" onclick="selectKit(2003, 'Goalposts & Nets')">
+              <i class="fa fa-arrow-right"></i> Goalposts &amp; Nets
+            </a>
+          </div>
+        </div>
+
+        <!-- Captain’s Armband -->
+        <div class="kit-card">
+          <img
+            src="https://cdn02.plentymarkets.com/zkz64ybyye6y/item/images/3901/full/XXXX-Armbinde-neongelb-03-NEU.jpg"
+            alt="Captain’s Armband"
+          />
+          <div class="content">
+            <a href="issue-return.html?kit=Captain%E2%80%99s%20Armband" class="issue-btn" onclick="selectKit(2004, 'Captain\'s Armband')">
+              <i class="fa fa-arrow-right"></i> Captain’s Armband
+            </a>
+          </div>
+        </div>
+
+        <!-- Socks / Straps -->
+        <div class="kit-card">
+          <img
+            src="https://lion-sportswear.com/cdn/shop/files/sky.png?v=1705417046&width=1080"
+            alt="Socks Tape / Straps"
+          />
+          <div class="content">
+            <a href="issue-return.html?kit=Socks%20Tape%20%2F%20Straps" class="issue-btn" onclick="selectKit(2005, 'Socks / Straps')">
+              <i class="fa fa-arrow-right"></i> Socks / Straps
+            </a>
+          </div>
+        </div>
+
+        <!-- Shoes -->
+        <div class="kit-card">
+          <img
+            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRjkhA8yYsLG1fLIVN2NuidA_PgsGWDADvPNQ&s"
+            alt="Shoes"
+          />
+          <div class="content">
+            <a href="issue-return.html?kit=Football Shoes" class="issue-btn" onclick="selectKit(2006, 'Football Shoes')">
+              <i class="fa fa-arrow-right"></i> Shoes
+            </a>
+          </div>
+        </div>
+
+        <!-- Shin Guards -->
+        <div class="kit-card">
+          <img
+            src="https://m.media-amazon.com/images/I/81J1YzYoFNL.jpg"
+            alt="Shin Guards"
+          />
+          <div class="content">
+            <a href="issue-return.html?kit=Shin%20Guards" class="issue-btn" onclick="selectKit(2007, 'Shin Guards')">
+              <i class="fa fa-arrow-right"></i> Shin Guards
+            </a>
+          </div>
+        </div>
+
+        <!-- Goalkeeper Gloves -->
+        <div class="kit-card">
+          <img
+            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT2K1uq41d4dn5mUuocCOX6589WYp-bUtCsOg&s"
+            alt="Goalkeeper Gloves"
+          />
+          <div class="content">
+            <a href="issue-return.html?kit=Goalkeeper%20Gloves" class="issue-btn" onclick="selectKit(2008, 'Goalkeeper Gloves')">
+              <i class="fa fa-arrow-right"></i> Goalkeeper Gloves
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <button class="scroll-btn right" onclick="scrollRight('carousel2')">
+        &#10095;
+      </button>
+    </div>
+    <!-- snooker & pool kits -->
+    <h2 id="indoorkits">SNOOKER & POOL KITS</h2>
+<div class="carousel-container">
+
+  <button class="scroll-btn left" onclick="scrollLeft('carousel4')">
+    &#10094;
+  </button>
+
+  <div class="carousel" id="carousel4">
+
+    <!-- Snooker Table -->
+    <div class="kit-card">
+      <img src="https://library.sportingnews.com/styles/twitter_card_120x120/s3/2023-04/Snooker%20table%20GettyImages-835002860.jpg?itok=eRfp6Iiq">
+      <div class="content">
+        <a href="Snooker & Pool Register.html" class="issue-btn"
+           onclick="selectKit(4001,'Snooker Table')">
+          Snooker Table
+        </a>
+      </div>
+    </div>
+
+    <!-- Snooker Balls -->
+    <div class="kit-card">
+      <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRPh29xFdKABT050ApAD1ay8x7HgUpZnMkFmA&s">
+      <div class="content">
+        <a href="Snooker & Pool Register.html" class="issue-btn"
+           onclick="selectKit(4002,'Snooker Balls')">
+          Snooker Balls
+        </a>
+      </div>
+    </div>
+
+    <!-- Snooker Cue -->
+    <div class="kit-card">
+      <img src="https://m.media-amazon.com/images/I/61DodrTQ4lL._AC_UF894,1000_QL80_.jpg">
+      <div class="content">
+        <a href="Snooker & Pool Register.html" class="issue-btn"
+           onclick="selectKit(4003,'Snooker Cue')">
+          Snooker Cue
+        </a>
+      </div>
+    </div>
+
+   
+
+   
+
+   
+
+    <!-- Chalk -->
+    <div class="kit-card">
+      <img src="data:image/jpeg;base64,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">
+      <div class="content">
+        <a href="Snooker & Pool Register.html" class="issue-btn"
+           onclick="selectKit(5004,'Chalk')">
+          Chalk
+        </a>
+      </div>
+    </div>
+
+    <!-- Triangle -->
+    <div class="kit-card">
+      <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRBVYr1UkaMhYI9EW9j5IPImXsKFupAfOEfYw&s">
+      <div class="content">
+        <a href="Snooker & Pool Register.html" class="issue-btn"
+           onclick="selectKit(5005,'Triangle')">
+          Triangle
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+  <button class="scroll-btn right" onclick="scrollRight('carousel4')">
+    &#10095;
+  </button>
+
+
+    <!-- ================= FOOTER ================= -->
+
+    <footer class="footer">
+      <div class="footer-container">
+        <!-- About -->
+        <div class="footer-box">
+          <h3>SPORT<span>KITS</span></h3>
+          <p>
+            Sports Kits Management System for issuing, returning and managing
+            sports equipment easily.
+          </p>
+        </div>
+
+        <!-- Contact -->
+        <div class="footer-box">
+          <h3>Contact</h3>
+          <p><i class="fa fa-location-dot"></i> Sports Department</p>
+          <p><i class="fa fa-phone"></i> +91 98765 43210</p>
+          <p><i class="fa fa-envelope"></i> sportskits@gmail.com</p>
+        </div>
+
+        <!-- Social -->
+        <div class="footer-box">
+          <h3>Follow Us</h3>
+          <div class="social-links">
+            <a href="#"><i class="fab fa-facebook-f"></i></a>
+            <a href="#"><i class="fab fa-instagram"></i></a>
+            <a href="#"><i class="fab fa-x-twitter"></i></a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer Bottom -->
+      <div class="footer-bottom">
+        <p>© <span id="year"></span> SPORTKITS | All Rights Reserved</p>
+      </div>
+    </footer>
+
+    <!-- LOGIN MODAL -->
+<div id="loginmodal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closelogin()">&times;</span>
+
+    <div class="logo">SPORT<span>KITS</span></div>
+    <p class="subtitle">Log in to your account</p>
+
+    <form>
+      <label>Email / Enrollment ID</label>
+      <input type="text" placeholder="Enter your ID" required>
+
+      <label>Password</label>
+      <input type="password" placeholder="Enter password" required>
+
+      <button type="submit" class="login-btn">Login</button>
+
+      <div class="forgot">
+        <a href="#">Forgot password?</a>
+      </div>
+    </form>
+  </div>
+</div>
+  </body>
+</html>
