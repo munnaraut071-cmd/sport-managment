@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Auto Login - Sports Kits</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: white;
+    }
+    .container {
+      text-align: center;
+      padding: 40px;
+      background: rgba(30, 41, 59, 0.9);
+      border-radius: 16px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+      max-width: 400px;
+    }
+    h1 { color: #10b981; margin-bottom: 30px; }
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 15px 30px;
+      margin: 10px 0;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .btn-admin {
+      background: linear-gradient(135deg, #10b981, #06b6d4);
+      color: white;
+    }
+    .btn-user {
+      background: linear-gradient(135deg, #06b6d4, #3b82f6);
+      color: white;
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+    }
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .status {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 8px;
+      display: none;
+      font-weight: bold;
+    }
+    .status.success {
+      background: #10b981;
+      display: block;
+    }
+    .status.error {
+      background: #ef4444;
+      display: block;
+    }
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 10px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .info {
+      margin-top: 20px;
+      padding: 15px;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    .info strong {
+      color: #10b981;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Auto Login</h1>
+    <p>Click button to automatically log in:</p>
+    
+    <button class="btn btn-admin" id="adminBtn" onclick="autoLogin('admin')">
+      Auto Login as Admin
+    </button>
+    <button class="btn btn-user" id="userBtn" onclick="autoLogin('user')">
+      Auto Login as User
+    </button>
+    
+    <div id="status" class="status"></div>
+    
+    <div class="info">
+      <strong>Admin:</strong> admin@sportkits.com / Admin@123<br>
+      <strong>User:</strong> user@sportkits.com / User@123
+    </div>
+  </div>
+
+  <script>
+    // Try multiple API URLs
+    const API_URLS = [
+      'http://localhost:5001/api',
+      '/api'
+    ];
+    
+    const CREDENTIALS = {
+      admin: { email: 'admin@sportkits.com', password: 'Admin@123' },
+      user: { email: 'user@sportkits.com', password: 'User@123' }
+    };
+
+    async function autoLogin(type) {
+      const status = document.getElementById('status');
+      const btn = document.getElementById(type + 'Btn');
+      
+      btn.disabled = true;
+      status.className = 'status';
+      status.style.display = 'block';
+      status.innerHTML = '<span class="loading"></span> Logging in...';
+      
+      let lastError = null;
+      
+      // Try each API URL
+      for (const API_URL of API_URLS) {
+        try {
+          console.log('Trying API:', API_URL);
+          
+          const response = await fetch(`${API_URL}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(CREDENTIALS[type])
+          });
+          
+          const data = await response.json();
+          console.log('Response:', data);
+          
+          if (data.success) {
+            localStorage.setItem('authToken', data.token);
+            localStorage.setItem('user', JSON.stringify(data.user));
+            
+            status.className = 'status success';
+            status.innerHTML = type.toUpperCase() + ' logged in!<br>Token saved. Redirecting...';
+            
+            setTimeout(() => {
+              window.location.href = '/dashboard';
+            }, 1000);
+            return;
+          } else {
+            throw new Error(data.message || 'Login failed');
+          }
+          
+        } catch (error) {
+          console.error('Error with', API_URL, ':', error);
+          lastError = error;
+        }
+      }
+      
+      // All attempts failed
+      status.className = 'status error';
+      status.innerHTML = '<b>Error:</b> ' + (lastError?.message || 'Cannot connect to server') + '<br><br>' +
+        '<small>Make sure backend is running on port 5001</small>';
+      btn.disabled = false;
+    }
+    
+    // Check server status on load
+    window.onload = async () => {
+      const status = document.getElementById('status');
+      try {
+        const res = await fetch('http://localhost:5001/health', { method: 'GET' });
+        if (res.ok) {
+          status.className = 'status success';
+          status.style.display = 'block';
+          status.textContent = 'Server is running! Click button to login.';
+        }
+      } catch (e) {
+        status.className = 'status error';
+        status.style.display = 'block';
+        status.innerHTML = '<b>Server not running!</b><br>Start backend: cd backend && npm start';
+      }
+    };
+  </script>
+</body>
+</html>

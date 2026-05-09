@@ -1,0 +1,41 @@
+{
+  "name": "sports-kits-management-system",
+  "version": "1.0.0",
+  "description": "SPORTKITS - Smart Sports Inventory Management System with AI",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd backend && npm run dev",
+    "client": "cd frontend && npm run dev",
+    "install-all": "npm install && cd frontend && npm install && cd ../backend && npm install",
+    "build": "cd frontend && npm run build",
+    "start": "cd backend && npm start",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/munnaraut071-cmd/sport-managment.git"
+  },
+  "keywords": [
+    "sports",
+    "inventory",
+    "management",
+    "ai",
+    "react",
+    "nodejs"
+  ],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/munnaraut071-cmd/sport-managment/issues"
+  },
+  "homepage": "https://github.com/munnaraut071-cmd/sport-managment#readme",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

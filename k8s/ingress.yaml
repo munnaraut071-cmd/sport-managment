@@ -1,0 +1,53 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: sportkits-ingress
+  namespace: sportkits
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  tls:
+  - hosts:
+    - sportkits.io
+    - www.sportkits.io
+    secretName: sportkits-tls
+  rules:
+  - host: sportkits.io
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: sportkits-frontend
+            port:
+              number: 80
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: sportkits-backend
+            port:
+              number: 5001
+      - path: /ai
+        pathType: Prefix
+        backend:
+          service:
+            name: sportkits-ai
+            port:
+              number: 8000
+  - host: www.sportkits.io
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: sportkits-frontend
+            port:
+              number: 80

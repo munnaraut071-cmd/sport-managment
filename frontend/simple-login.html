@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Simple Login - Sports Kits</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #1e3a5f 0%, #0d2137 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .login-box {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      width: 100%;
+      max-width: 400px;
+    }
+    h2 {
+      color: #1e3a5f;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #333;
+      font-weight: bold;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+    input:focus {
+      border-color: #10b981;
+      outline: none;
+    }
+    button {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #10b981, #06b6d4);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    button:hover {
+      transform: translateY(-2px);
+    }
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .error {
+      background: #fee;
+      color: #c33;
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      display: none;
+    }
+    .success {
+      background: #efe;
+      color: #3c3;
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      display: none;
+    }
+    .demo-buttons {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #ddd;
+    }
+    .demo-btn {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 10px;
+      background: #f0f9ff;
+      border: 2px solid #0ea5e9;
+      color: #0ea5e9;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .demo-btn:hover {
+      background: #0ea5e9;
+      color: white;
+    }
+    .status {
+      text-align: center;
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 6px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-box">
+    <h2>Sports Kits Login</h2>
+    
+    <div id="error" class="error"></div>
+    <div id="success" class="success"></div>
+    <div id="status" class="status"></div>
+    
+    <form id="loginForm">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="email" placeholder="Enter email" required>
+      </div>
+      
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="password" placeholder="Enter password" required>
+      </div>
+      
+      <button type="submit" id="loginBtn">Login</button>
+    </form>
+    
+    <div class="demo-buttons">
+      <p style="text-align:center; color:#666; margin-bottom:15px;">Quick Login:</p>
+      <button type="button" class="demo-btn" onclick="autoFill('admin')">
+        Login as Admin (admin@sportkits.com)
+      </button>
+      <button type="button" class="demo-btn" onclick="autoFill('user')">
+        Login as User (user@sportkits.com)
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // Try different API URLs
+    const API_URLS = [
+      'http://localhost:5001/api',
+      'http://127.0.0.1:5001/api'
+    ];
+    
+    const errorDiv = document.getElementById('error');
+    const successDiv = document.getElementById('success');
+    const statusDiv = document.getElementById('status');
+    const loginBtn = document.getElementById('loginBtn');
+    
+    function showError(msg) {
+      errorDiv.textContent = msg;
+      errorDiv.style.display = 'block';
+      successDiv.style.display = 'none';
+    }
+    
+    function showSuccess(msg) {
+      successDiv.textContent = msg;
+      successDiv.style.display = 'block';
+      errorDiv.style.display = 'none';
+    }
+    
+    function autoFill(type) {
+      if (type === 'admin') {
+        document.getElementById('email').value = 'admin@sportkits.com';
+        document.getElementById('password').value = 'Admin@123';
+      } else {
+        document.getElementById('email').value = 'user@sportkits.com';
+        document.getElementById('password').value = 'User@123';
+      }
+      doLogin();
+    }
+    
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      doLogin();
+    });
+    
+    async function doLogin() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      
+      if (!email || !password) {
+        showError('Please enter email and password');
+        return;
+      }
+      
+      loginBtn.disabled = true;
+      loginBtn.textContent = 'Logging in...';
+      errorDiv.style.display = 'none';
+      
+      let lastError = null;
+      
+      for (const apiUrl of API_URLS) {
+        try {
+          console.log('Trying:', apiUrl);
+          
+          const response = await fetch(`${apiUrl}/auth/login`, {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify({ email, password })
+          });
+          
+          let data;
+          try {
+            data = await response.json();
+          } catch {
+            data = { message: 'Server error' };
+          }
+          
+          console.log('Response:', data);
+          
+          if (response.ok && data.success) {
+            showSuccess('Login successful! Redirecting...');
+            
+            // Try to save token
+            try {
+              sessionStorage.setItem('authToken', data.token);
+              sessionStorage.setItem('user', JSON.stringify(data.user));
+              localStorage.setItem('authToken', data.token);
+              localStorage.setItem('user', JSON.stringify(data.user));
+            } catch (e) {
+              console.log('Storage not available, using URL redirect');
+            }
+            
+            // Redirect to dashboard
+            setTimeout(() => {
+              window.location.href = '/dashboard';
+            }, 1000);
+            return;
+          } else {
+            showError(data.message || 'Login failed');
+            loginBtn.disabled = false;
+            loginBtn.textContent = 'Login';
+            return;
+          }
+          
+        } catch (error) {
+          console.error('API error:', error);
+          lastError = error;
+        }
+      }
+      
+      showError('Cannot connect to server. Make sure backend is running on port 5001');
+      loginBtn.disabled = false;
+      loginBtn.textContent = 'Login';
+    }
+    
+    // Check backend on load
+    window.onload = async () => {
+      for (const apiUrl of API_URLS) {
+        try {
+          const res = await fetch(`${apiUrl.replace('/api', '')}/health`, { 
+            method: 'GET',
+            mode: 'no-cors'
+          });
+          if (res.ok || res.type === 'opaque') {
+            statusDiv.textContent = 'Server is running';
+            statusDiv.style.background = '#efe';
+            statusDiv.style.color = '#3c3';
+            statusDiv.style.display = 'block';
+            return;
+          }
+        } catch (e) {
+          // Try next URL
+        }
+      }
+      statusDiv.textContent = 'Server not detected - start backend: cd backend && npm start';
+      statusDiv.style.background = '#fee';
+      statusDiv.style.color = '#c33';
+      statusDiv.style.display = 'block';
+    };
+  </script>
+</body>
+</html>
