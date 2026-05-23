@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import { usersAPI, authAPI } from '@/services/api';
@@ -22,7 +22,11 @@ const UserManagement = () => {
     password: '',
     role: 'user'
   });
-  const { toast } = useToast();
+  const [editingUser, setEditingUser] = useState(null);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
+  const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
     fetchUsers();
@@ -55,15 +59,22 @@ const UserManagement = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (confirm('Are you sure you want to delete this user?')) {
-      try {
-        await usersAPI.delete(id);
-        setUsers(users.filter(u => u._id !== id));
-        toast({ title: 'User deleted' });
-      } catch (error) {
-        toast({ title: 'Failed to delete user', variant: 'destructive' });
+
+
+  const handleUpdateUser = async () => {
+    try {
+      const response = await usersAPI.update(editingUser._id, editingUser);
+      // Check if response.data.success or just response.data
+      const updatedUser = response.data.data || response.data;
+      if (updatedUser) {
+        setUsers(users.map(u => u._id === editingUser._id ? updatedUser : u));
+        setShowEditDialog(false);
+        setEditingUser(null);
+        toast({ title: 'User updated successfully!' });
       }
+    } catch (error) {
+      console.error('User update failed:', error);
+      toast({ title: 'Failed to update user', variant: 'destructive' });
     }
   };
 
@@ -74,6 +85,23 @@ const UserManagement = () => {
       toast({ title: 'Role updated' });
     } catch (error) {
       toast({ title: 'Failed to update role', variant: 'destructive' });
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!userToDelete) return;
+    try {
+      setUpdating(true);
+      await usersAPI.delete(userToDelete._id);
+      setUsers(users.filter(u => u._id !== userToDelete._id));
+      setShowDeleteDialog(false);
+      setUserToDelete(null);
+      toast({ title: 'User deleted successfully' });
+    } catch (error) {
+      console.error('Delete failed:', error);
+      toast({ title: 'Failed to delete user', variant: 'destructive' });
+    } finally {
+      setUpdating(false);
     }
   };
 
@@ -111,6 +139,7 @@ const UserManagement = () => {
           <DialogContent className="bg-white dark:bg-[#111827] border-gray-200 dark:border-slate-800">
             <DialogHeader>
               <DialogTitle>Add New User</DialogTitle>
+              <DialogDescription>Create a new user account with appropriate permissions</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 pt-4">
               <Input
@@ -260,10 +289,24 @@ const UserManagement = () => {
                     `}>
                       {user.role}
                     </Badge>
-                    <Button variant="ghost" size="icon">
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      onClick={() => {
+                        setEditingUser({ ...user });
+                        setShowEditDialog(true);
+                      }}
+                    >
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(user._id)}>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => {
+                        setUserToDelete(user);
+                        setShowDeleteDialog(true);
+                      }}
+                    >
                       <Trash2 className="h-4 w-4 text-red-500" />
                     </Button>
                   </div>
@@ -273,6 +316,86 @@ const UserManagement = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Edit User Modal */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="bg-white dark:bg-[#111827] border-gray-200 dark:border-slate-800">
+          <DialogHeader>
+            <DialogTitle>Edit User Profile</DialogTitle>
+          </DialogHeader>
+          {editingUser && (
+            <div className="space-y-4 pt-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Full Name</label>
+                <Input
+                  placeholder="Full Name"
+                  value={editingUser.name}
+                  onChange={(e) => setEditingUser({ ...editingUser, name: e.target.value })}
+                  className="bg-gray-50 dark:bg-slate-800"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Email Address</label>
+                <Input
+                  type="email"
+                  placeholder="Email"
+                  value={editingUser.email}
+                  onChange={(e) => setEditingUser({ ...editingUser, email: e.target.value })}
+                  className="bg-gray-50 dark:bg-slate-800"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">System Role</label>
+                <Select value={editingUser.role} onValueChange={(value) => setEditingUser({ ...editingUser, role: value })}>
+                  <SelectTrigger className="bg-gray-50 dark:bg-slate-800">
+                    <SelectValue placeholder="Select Role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="user">Student/User</SelectItem>
+                    <SelectItem value="staff">Staff</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <Button variant="outline" onClick={() => setShowEditDialog(false)} className="flex-1">
+                  Cancel
+                </Button>
+                <Button onClick={handleUpdateUser} className="flex-1 bg-emerald-500 hover:bg-emerald-600">
+                  Save Changes
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+      {/* Delete User Modal */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent className="bg-white dark:bg-[#111827] border-gray-200 dark:border-slate-800">
+          <DialogHeader>
+            <DialogTitle className="text-red-500">Confirm Deletion</DialogTitle>
+            <DialogDescription>This action cannot be undone. Are you sure you want to delete this user?</DialogDescription>
+          </DialogHeader>
+          <div className="py-4 text-center space-y-4">
+            <p className="text-slate-600 dark:text-slate-400">
+              Are you sure you want to delete <span className="font-bold text-gray-900 dark:text-white">{userToDelete?.name}</span>? 
+              This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={() => setShowDeleteDialog(false)} className="flex-1" disabled={updating}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleDelete} 
+                disabled={updating}
+                className="flex-1 bg-red-500 hover:bg-red-600 text-white"
+              >
+                {updating ? 'Deleting...' : 'Delete User'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

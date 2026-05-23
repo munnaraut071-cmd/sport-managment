@@ -5,6 +5,7 @@ const { body, validationResult } = require('express-validator');
 const Transaction = require('../models/Transaction');
 const Kit = require('../models/Kit');
 const User = require('../models/User');
+const Fine = require('../models/Fine');
 const { protect, staffAndAdmin } = require('../middleware/auth');
 
 // @route   GET /api/transactions
@@ -254,6 +255,32 @@ router.post('/return', staffAndAdmin, [
     // Check if return was late
     if (transaction.daysOverdue > 0) {
       user.lateReturns += 1;
+      
+      // Auto-generate Fine
+      const baseRate = 10; // 10 per day default
+      const fineAmount = Fine.calculateFine(transaction.daysOverdue, baseRate);
+      
+      try {
+        await Fine.create({
+          user: user._id,
+          transaction: transaction._id,
+          kit: kit._id,
+          daysLate: transaction.daysOverdue,
+          finePerDay: baseRate,
+          fineAmount: fineAmount,
+          fineRules: {
+            baseRate,
+            maxCap: 30 * baseRate * 2,
+            damageCharges: 0,
+            processingFee: 0
+          },
+          notes: 'Auto-generated fine for late return',
+          createdBy: req.user._id
+        });
+        console.log(`✅ Auto-generated fine of ₹${fineAmount} for user ${user.email}`);
+      } catch (fineErr) {
+        console.error('❌ Failed to auto-generate fine:', fineErr);
+      }
     }
 
     user.updateRiskScore();
@@ -310,6 +337,124 @@ router.get('/alerts/overdue', staffAndAdmin, async (req, res, next) => {
       success: true,
       count: transactions.length,
       data: transactions
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// @route   GET /api/transactions/stats
+// @desc    Get transaction statistics
+// @access  Staff/Admin
+router.get('/stats', staffAndAdmin, async (req, res, next) => {
+  try {
+    const total = await Transaction.countDocuments();
+    const active = await Transaction.countDocuments({ status: { $ne: 'returned' }, dueDate: { $gte: new Date() } });
+    const overdue = await Transaction.countDocuments({ status: { $ne: 'returned' }, dueDate: { $lt: new Date() } });
+    const returned = await Transaction.countDocuments({ status: 'returned' });
+
+    res.json({
+      success: true,
+      data: { total, active, overdue, returned }
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// @route   GET /api/transactions/export
+// @desc    Export transactions data
+// @access  Staff/Admin
+router.get('/export', staffAndAdmin, async (req, res, next) => {
+  try {
+    const transactions = await Transaction.find()
+      .populate('user', 'name email rollNo')
+      .populate('kit', 'name category')
+      .sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      data: transactions
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// @route   GET /api/transactions/:id
+// @desc    Get single transaction
+// @access  Private
+router.get('/:id', async (req, res, next) => {
+  try {
+    const transaction = await Transaction.findById(req.params.id)
+      .populate('user', 'name email rollNo')
+      .populate('kit', 'name category image');
+
+    if (!transaction) {
+      return res.status(404).json({ success: false, message: 'Transaction not found' });
+    }
+
+    if (req.user.role === 'user' && transaction.user._id.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ success: false, message: 'Not authorized to view this transaction' });
+    }
+
+    res.json({
+      success: true,
+      data: transaction
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// @route   PUT /api/transactions/:id
+// @desc    Update a transaction
+// @access  Staff/Admin
+router.put('/:id', staffAndAdmin, async (req, res, next) => {
+  try {
+    let transaction = await Transaction.findById(req.params.id);
+
+    if (!transaction) {
+      return res.status(404).json({ success: false, message: 'Transaction not found' });
+    }
+
+    const { dueDate, notes, status, condition } = req.body;
+    
+    if (dueDate) transaction.dueDate = dueDate;
+    if (notes !== undefined) transaction.notes = notes;
+    if (status) transaction.status = status;
+    if (condition) transaction.condition = condition;
+
+    await transaction.save();
+    
+    await transaction.populate('user', 'name email');
+    await transaction.populate('kit', 'name category image');
+
+    res.json({
+      success: true,
+      data: transaction
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// @route   DELETE /api/transactions/:id
+// @desc    Delete a transaction
+// @access  Admin
+router.delete('/:id', staffAndAdmin, async (req, res, next) => {
+  try {
+    const transaction = await Transaction.findById(req.params.id);
+
+    if (!transaction) {
+      return res.status(404).json({ success: false, message: 'Transaction not found' });
+    }
+
+    await transaction.deleteOne();
+
+    res.json({
+      success: true,
+      data: {}
     });
   } catch (error) {
     next(error);

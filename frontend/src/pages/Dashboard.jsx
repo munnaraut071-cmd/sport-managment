@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Legend, AreaChart, Area,
@@ -8,13 +8,14 @@ import {
   Package, ArrowUpCircle, ArrowDownCircle, AlertTriangle,
   TrendingUp, Trophy, Calendar, ChevronDown, Sparkles,
   Medal, Zap, ArrowUpRight, ArrowDownRight, Loader2,
-  Search, Bell, User, ChevronRight, Activity, Clock,
+  Search, Bell, User, ChevronRight, Activity, Clock, X,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { analyticsAPI, transactionsAPI, aiAPI, tournamentsAPI } from '@/services/api';
 
 // Animation variants
@@ -79,26 +80,68 @@ const ActivityItem = ({ action, user, time, type }) => {
   );
 };
 
-const EventCard = ({ title, date, description, icon: EventIcon, sports }) => (
-  <div className="flex gap-4 py-4 border-b border-gray-800/40 last:border-0 group cursor-default hover:bg-gray-800/20 rounded-xl px-2 -mx-2 transition-colors">
-    <div className="w-14 h-16 bg-gradient-to-b from-emerald-500/20 to-emerald-500/5 rounded-xl flex flex-col items-center justify-center border border-emerald-500/20 flex-shrink-0 group-hover:border-emerald-500/40 transition-colors">
-      <span className="text-[10px] text-emerald-400 font-bold tracking-widest">{date?.split(' ')[0]}</span>
-      <span className="text-xl text-white font-bold leading-none">{date?.split(' ')[1]}</span>
-    </div>
-    <div className="flex-1 min-w-0">
-      <div className="flex items-center gap-2 mb-1">
-        <EventIcon size={14} className="text-emerald-400" />
-        <h4 className="text-sm font-semibold text-white group-hover:text-emerald-400 transition-colors truncate">{title}</h4>
+const EventCard = ({ title, date, description, icon: EventIcon, sports, endDate, location }) => {
+  const formatSportName = (sport) => {
+    const names = {
+      'cricket': 'Cricket',
+      'football': 'Football',
+      'basketball': 'Basketball',
+      'tennis': 'Tennis',
+      'badminton': 'Badminton',
+      'volleyball': 'Volleyball',
+      'kabaddi': 'Kabaddi',
+      'athletics': 'Athletics',
+      'inter-college': 'Inter-College',
+      'intra-college': 'Intra-College',
+      'inter-department': 'Inter-Department',
+      'state-level': 'State Level',
+      'national-level': 'National Level',
+      'practice': 'Practice',
+      'friendly': 'Friendly',
+      'other': 'Other'
+    };
+    return names[sport?.toLowerCase()] || sport || 'Sports';
+  };
+
+  return (
+    <div className="relative group">
+      <div className="absolute -inset-[1px] bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-emerald-500/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+      <div className="relative bg-gradient-to-br from-gray-900/80 to-gray-800/80 backdrop-blur-xl rounded-2xl border border-gray-700/50 p-5 hover:border-cyan-500/30 transition-all duration-300 shadow-lg hover:shadow-cyan-500/10">
+        <div className="flex gap-4">
+          <div className="flex-shrink-0">
+            <div className="w-16 h-20 bg-gradient-to-br from-cyan-500/30 to-blue-600/30 rounded-xl flex flex-col items-center justify-center border border-cyan-500/30 shadow-lg shadow-cyan-500/20 group-hover:scale-110 transition-transform duration-300">
+              <span className="text-[9px] text-cyan-400 font-bold tracking-widest uppercase">{date?.split(' ')[0] || 'JAN'}</span>
+              <span className="text-2xl text-white font-bold leading-none">{date?.split(' ')[1] || '01'}</span>
+              {endDate && <span className="text-[8px] text-gray-400 mt-1">- {endDate?.split(' ')[1]}</span>}
+            </div>
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="p-1.5 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-lg border border-cyan-500/30 shadow-lg shadow-cyan-500/10">
+                <EventIcon size={12} className="text-cyan-400" />
+              </div>
+              <h4 className="text-sm font-bold text-white group-hover:text-cyan-400 transition-colors truncate">{title}</h4>
+            </div>
+            <p className="text-xs text-gray-400 mb-3 line-clamp-2 leading-relaxed">{description}</p>
+            <div className="flex items-center gap-2 mb-3">
+              {location && (
+                <span className="text-[10px] text-gray-500 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full shadow-lg shadow-cyan-500/50"></span>
+                  {location}
+                </span>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {sports?.slice(0, 3).map((s) => (
+                <span key={s} className="text-[10px] px-2.5 py-1 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-lg text-cyan-400 border border-cyan-500/20 font-medium shadow-sm">{formatSportName(s)}</span>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
-      <p className="text-xs text-gray-500 mb-2 line-clamp-1">{description}</p>
-      <div className="flex flex-wrap gap-1.5">
-        {sports?.slice(0, 3).map((s) => (
-          <span key={s} className="text-[10px] px-2 py-0.5 bg-gray-800/80 rounded-md text-gray-400 border border-gray-700/50">{s}</span>
-        ))}
-      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
@@ -117,6 +160,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState('This Month');
   const [searchQuery, setSearchQuery] = useState('');
@@ -134,7 +178,11 @@ const Dashboard = () => {
   const [activities, setActivities] = useState([]);
   const [lowStockItems, setLowStockItems] = useState([]);
   const [aiRecommendations, setAiRecommendations] = useState([]);
+  const [playerRecommendations, setPlayerRecommendations] = useState([]);
   const [events, setEvents] = useState([]);
+  const [showAiModal, setShowAiModal] = useState(false);
+  const [selectedRecommendation, setSelectedRecommendation] = useState(null);
+  const [isAiDismissed, setIsAiDismissed] = useState(false);
 
   // Fetch dashboard data
   useEffect(() => {
@@ -151,10 +199,10 @@ const Dashboard = () => {
       
       if (dashboardData?.counts) {
         setStats({
-          totalKits: dashboardData.counts.totalKits || 0,
-          issuedKits: dashboardData.counts.issuedKits || 0,
-          availableKits: dashboardData.counts.availableKits || 0,
-          lowStockCount: dashboardData.counts.lowStockCount || 0,
+          totalKits: Math.max(0, dashboardData.counts.totalKits || 0),
+          issuedKits: Math.max(0, dashboardData.counts.issuedKits || 0),
+          availableKits: Math.max(0, dashboardData.counts.availableKits || 0),
+          lowStockCount: Math.max(0, dashboardData.counts.lowStockCount || 0),
         });
       }
 
@@ -195,20 +243,28 @@ const Dashboard = () => {
 
       // Fetch AI recommendations
       try {
-        const aiRes = await aiAPI.getRecommendations();
-        if (aiRes.data?.data) {
-          setAiRecommendations(aiRes.data.data.slice(0, 4).map(rec => ({
-            text: rec.message || rec.text,
-            icon: getIconForType(rec.type || 'info')
-          })));
+        if (user?.role === 'player') {
+          const aiRes = await aiAPI.getPersonalizedRecommendations(user.id);
+          if (aiRes.data?.data) {
+            setPlayerRecommendations(aiRes.data.data.slice(0, 4));
+          }
+        } else {
+          const aiRes = await aiAPI.getRecommendations();
+          if (aiRes.data?.data) {
+            setAiRecommendations(aiRes.data.data.slice(0, 4).map(rec => ({
+              text: rec.message || rec.text,
+              icon: getIconForType(rec.type || 'info')
+            })));
+          }
         }
       } catch (e) {
         console.warn('AI Recommendations unavailable');
         setAiRecommendations([]);
+        setPlayerRecommendations([]);
       }
 
       // Fetch recent transactions for activities
-      const transactionsRes = await transactionsAPI.getAll({ limit: 6 });
+      const transactionsRes = await transactionsAPI.getAll({ limit: 12 });
       if (transactionsRes.data.data) {
         setActivities(transactionsRes.data.data.map(t => ({
           id: t._id,
@@ -221,18 +277,31 @@ const Dashboard = () => {
 
       // Fetch upcoming tournaments/events
       try {
+        console.log('Fetching tournaments...');
         const tournamentsRes = await tournamentsAPI.getAll({ upcoming: true, limit: 3 });
-        if (tournamentsRes.data?.data) {
-          setEvents(tournamentsRes.data.data.map(t => ({
-            title: t.eventName,
+        console.log('Tournaments response:', tournamentsRes);
+        console.log('Tournaments data:', tournamentsRes.data);
+        
+        const tournaments = tournamentsRes.data?.data || tournamentsRes.data;
+        console.log('Tournaments array:', tournaments);
+        
+        if (tournaments && tournaments.length > 0) {
+          setEvents(tournaments.map(t => ({
+            title: t.eventName || t.name,
             date: formatEventDate(t.startDate),
-            description: `${t.description?.substring(0, 50) || 'Tournament event'} • ${t.sports?.join(', ') || 'All Sports'}`,
+            endDate: formatEventDate(t.endDate),
+            description: t.description?.substring(0, 60) || 'Sports tournament event',
             icon: Trophy,
-            sports: t.sports || ['Sports']
+            sports: [t.sport || t.eventType || t.category || 'Sports'],
+            location: t.location || 'Main Ground'
           })));
+          console.log('Set events:', tournaments.length);
+        } else {
+          console.log('No tournaments found');
+          setEvents([]);
         }
       } catch (e) {
-        console.warn('Tournaments data unavailable');
+        console.error('Tournaments error:', e);
         setEvents([]);
       }
 
@@ -467,7 +536,7 @@ const Dashboard = () => {
                   </div>
                 </div>
                 
-                <div className="flex-1 overflow-hidden">
+                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
                   <div className="space-y-1">
                     {activities.map((a) => (
                       <ActivityItem key={a.id} {...a} />
@@ -475,7 +544,11 @@ const Dashboard = () => {
                   </div>
                 </div>
                 
-                <Button variant="ghost" className="w-full mt-4 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 text-sm font-medium">
+                <Button 
+                  onClick={() => navigate('/history')}
+                  variant="ghost" 
+                  className="w-full mt-4 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 text-sm font-medium"
+                >
                   View All <ChevronRight size={16} className="ml-1" />
                 </Button>
               </div>
@@ -520,93 +593,242 @@ const Dashboard = () => {
                   ))}
                 </div>
                 
-                <Button variant="ghost" className="w-full mt-6 text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-500/10 text-sm font-medium">
+                <Button 
+                  onClick={() => navigate('/inventory')}
+                  variant="ghost" 
+                  className="w-full mt-6 text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-500/10 text-sm font-medium"
+                >
                   View All <ChevronRight size={16} className="ml-1" />
                 </Button>
               </div>
             </motion.div>
 
-            {/* AI Recommendation - col-span-5 */}
-            <motion.div className="lg:col-span-5" variants={fadeUp} initial="hidden" animate="show" custom={8}>
-              <div className="relative bg-gradient-to-br from-emerald-50 dark:from-emerald-900/40 via-white dark:via-[#0F172A]/80 to-white dark:to-[#0F172A]/80 rounded-2xl border border-emerald-200 dark:border-emerald-500/20 p-8 h-full overflow-hidden hover:border-emerald-300 dark:hover:border-emerald-500/40 shadow-sm dark:shadow-none hover:shadow-md dark:hover:shadow-none transition-all duration-300">
-                <div className="absolute -top-20 -right-20 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl"></div>
-                <div className="absolute -bottom-10 left-0 w-40 h-40 bg-teal-500/10 rounded-full blur-2xl"></div>
-                
-                <div className="relative flex gap-6">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-6">
-                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/30">
-                        <Sparkles size={26} className="text-white" />
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                          AI Recommendation
-                          <Badge className="bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs border-emerald-200 dark:border-emerald-500/30">NEW</Badge>
-                        </h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">Based on usage & upcoming tournaments</p>
-                      </div>
-                    </div>
+            <AnimatePresence>
+              {!isAiDismissed && (
+                <motion.div 
+                  className="lg:col-span-5" 
+                  variants={fadeUp} 
+                  initial="hidden" 
+                  animate="show" 
+                  exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                  custom={8}
+                >
+                  <div className="relative bg-gradient-to-br from-emerald-50 dark:from-emerald-900/40 via-white dark:via-[#0F172A]/80 to-white dark:to-[#0F172A]/80 rounded-2xl border border-emerald-200 dark:border-emerald-500/20 p-8 h-full overflow-hidden hover:border-emerald-300 dark:hover:border-emerald-500/40 shadow-sm dark:shadow-none hover:shadow-md dark:hover:shadow-none transition-all duration-300">
+                    <div className="absolute -top-20 -right-20 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl"></div>
+                    <div className="absolute -bottom-10 left-0 w-40 h-40 bg-teal-500/10 rounded-full blur-2xl"></div>
                     
-                    <ul className="space-y-4 mb-8">
-                      {aiRecommendations.slice(0, 3).map((rec, i) => (
-                        <li key={i} className="flex items-center gap-3 text-base text-gray-700 dark:text-gray-300">
-                          <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-500/15 border border-emerald-200 dark:border-emerald-500/20 flex items-center justify-center flex-shrink-0">
-                            <rec.icon size={16} className="text-emerald-600 dark:text-emerald-400" />
+                    <div className="relative flex gap-6">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-6">
+                          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                            <Sparkles size={26} className="text-white" />
                           </div>
-                          <span className="font-medium">{rec.text}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    
-                    <div className="flex gap-3">
-                      <Button className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white px-6 py-3 rounded-xl text-base font-semibold transition-all duration-300 flex items-center gap-2 shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:scale-[1.02] active:scale-[0.98]">
-                        View Details
-                        <ArrowUpRight size={18} />
-                      </Button>
-                      <Button variant="outline" className="border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 px-6 py-3 rounded-xl text-base font-medium">
-                        Dismiss
-                      </Button>
+                          <div>
+                            <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                              AI Recommendation
+                              <Badge className="bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs border-emerald-200 dark:border-emerald-500/30">NEW</Badge>
+                            </h3>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">Based on usage & upcoming tournaments</p>
+                          </div>
+                        </div>
+                        
+                        <ul className="space-y-4 mb-8">
+                          {user?.role === 'player' ? (
+                            playerRecommendations.length > 0 ? (
+                              playerRecommendations.slice(0, 3).map((rec, i) => (
+                                <li key={i} className="flex items-start gap-3 text-base text-gray-700 dark:text-gray-300">
+                                  <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-500/15 border border-emerald-200 dark:border-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                                    <Sparkles size={16} className="text-emerald-600 dark:text-emerald-400" />
+                                  </div>
+                                  <span className="font-medium">{rec.title} <span className="text-sm font-normal text-slate-500 block">{rec.description}</span></span>
+                                </li>
+                              ))
+                            ) : (
+                              <li className="text-slate-500 text-sm">No personalized recommendations available yet.</li>
+                            )
+                          ) : (
+                            aiRecommendations.slice(0, 3).map((rec, i) => (
+                              <li key={i} className="flex items-start gap-3 text-base text-gray-700 dark:text-gray-300">
+                                <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-500/15 border border-emerald-200 dark:border-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                                  <rec.icon size={16} className="text-emerald-600 dark:text-emerald-400" />
+                                </div>
+                                <span className="font-medium">{rec.text}</span>
+                              </li>
+                            ))
+                          )}
+                        </ul>
+                        
+                        <div className="flex gap-3">
+                          <Button 
+                            onClick={() => {
+                              setSelectedRecommendation(user?.role === 'player' ? playerRecommendations[0] : aiRecommendations[0]);
+                              setShowAiModal(true);
+                            }}
+                            className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white px-6 py-3 rounded-xl text-base font-semibold transition-all duration-300 flex items-center gap-2 shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:scale-[1.02] active:scale-[0.98]"
+                          >
+                            View Details
+                            <ArrowUpRight size={18} />
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            onClick={() => setIsAiDismissed(true)}
+                            className="border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 px-6 py-3 rounded-xl text-base font-medium"
+                          >
+                            Dismiss
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      <div className="hidden lg:flex flex-col items-center justify-center w-32">
+                        <div className="relative">
+                          <div className="text-6xl drop-shadow-2xl">🏏</div>
+                          <div className="absolute -bottom-3 -right-4 text-4xl drop-shadow-xl">🧤</div>
+                          <div className="absolute -top-2 -right-6 text-3xl drop-shadow-lg">⚽</div>
+                          <div className="absolute top-4 -left-6 text-3xl drop-shadow-lg">🏀</div>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  
-                  <div className="hidden lg:flex flex-col items-center justify-center w-32">
-                    <div className="relative">
-                      <div className="text-6xl drop-shadow-2xl">🏏</div>
-                      <div className="absolute -bottom-3 -right-4 text-4xl drop-shadow-xl">🧤</div>
-                      <div className="absolute -top-2 -right-6 text-3xl drop-shadow-lg">⚽</div>
-                      <div className="absolute top-4 -left-6 text-3xl drop-shadow-lg">🏀</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Upcoming Events - col-span-3 */}
             <motion.div className="lg:col-span-3" variants={fadeUp} initial="hidden" animate="show" custom={9}>
-              <div className="bg-[#0F172A]/60 backdrop-blur-xl rounded-2xl border border-gray-800/60 p-8 h-full hover:border-gray-700/80 transition-all duration-300">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
-                      <Calendar size={24} className="text-white" />
+              <div className="relative">
+                <div className="absolute -inset-[1px] bg-gradient-to-br from-cyan-500/20 via-blue-500/20 to-emerald-500/20 rounded-3xl blur-2xl opacity-30"></div>
+                <div className="relative bg-gradient-to-br from-gray-900/90 to-gray-800/90 backdrop-blur-2xl rounded-3xl border border-gray-700/50 p-6 h-full hover:border-cyan-500/30 transition-all duration-500 shadow-2xl">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-4">
+                      <div className="relative">
+                        <div className="absolute -inset-[2px] bg-gradient-to-br from-cyan-500 to-blue-500 rounded-2xl blur-lg opacity-50"></div>
+                        <div className="relative w-14 h-14 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-cyan-500/30">
+                          <Calendar size={24} className="text-white" />
+                        </div>
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-white tracking-tight">Upcoming Events</h3>
+                        <p className="text-sm text-gray-400">Scheduled activities</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-white">Upcoming Events</h3>
-                      <p className="text-sm text-gray-500">Scheduled activities</p>
+                    <div className="flex items-center gap-2">
+                      <div className="relative">
+                        <div className="absolute -inset-[1px] bg-gradient-to-r from-cyan-500 to-emerald-500 rounded-full blur-sm opacity-75"></div>
+                        <div className="relative w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></div>
+                      </div>
+                      <span className="text-xs text-cyan-400 font-semibold">{events.length} Events</span>
                     </div>
                   </div>
+
+                  {events.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <div className="relative mb-4">
+                        <div className="absolute -inset-[2px] bg-gradient-to-br from-cyan-500/30 to-blue-500/30 rounded-full blur-lg opacity-50"></div>
+                        <div className="relative w-16 h-16 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-full flex items-center justify-center border border-cyan-500/30">
+                          <Calendar size={32} className="text-cyan-400" />
+                        </div>
+                      </div>
+                      <p className="text-sm text-gray-400 font-medium">No upcoming events</p>
+                      <Button 
+                        onClick={() => navigate('/tournaments')}
+                        variant="ghost" 
+                        className="mt-4 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10 text-sm font-medium rounded-xl transition-all duration-300"
+                      >
+                        Schedule Event
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="space-y-4 max-h-[340px] overflow-y-auto pr-2 custom-scrollbar">
+                        {events.map((e, i) => <EventCard key={i} {...e} />)}
+                      </div>
+
+                      <Button 
+                        onClick={() => navigate('/tournaments')}
+                        className="w-full mt-6 h-12 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white rounded-xl font-bold shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/30 transition-all duration-300 flex items-center justify-center gap-2"
+                      >
+                        View All Events <ChevronRight size={18} />
+                      </Button>
+                    </>
+                  )}
                 </div>
-                
-                <div className="space-y-2">
-                  {events.map((e, i) => <EventCard key={i} {...e} />)}
-                </div>
-                
-                <Button variant="ghost" className="w-full mt-6 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 text-sm font-medium">
-                  View All <ChevronRight size={16} className="ml-1" />
-                </Button>
               </div>
             </motion.div>
           </div>
         </div>
+      {/* AI Recommendation Details Modal */}
+      <AnimatePresence>
+        {showAiModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            onClick={() => setShowAiModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="bg-white dark:bg-[#0F172A] w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden border border-gray-200 dark:border-slate-800"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="p-8">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                      <Sparkles size={26} className="text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white">AI Analysis</h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Deep insights for your inventory</p>
+                    </div>
+                  </div>
+                  <button onClick={() => setShowAiModal(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
+                    <X size={24} />
+                  </button>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="bg-emerald-50 dark:bg-emerald-500/10 p-6 rounded-2xl border border-emerald-100 dark:border-emerald-500/20">
+                    <h4 className="text-emerald-800 dark:text-emerald-400 font-bold mb-3 flex items-center gap-2 text-lg">
+                      <TrendingUp size={20} />
+                      Strategic Insights
+                    </h4>
+                    <ul className="space-y-4">
+                      {aiRecommendations.map((rec, i) => (
+                        <li key={i} className="flex items-start gap-3">
+                          <div className="mt-1 w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0" />
+                          <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                            {rec.text}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="bg-blue-50 dark:bg-blue-500/10 p-6 rounded-2xl border border-blue-100 dark:border-blue-500/20">
+                    <h4 className="text-blue-800 dark:text-blue-400 font-bold mb-2 flex items-center gap-2">
+                      <Activity size={18} />
+                      Contextual Data
+                    </h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                      This analysis is based on historical kit usage patterns over the last 30 days and upcoming tournaments scheduled for next week. Our AI predicts a 25% increase in Cricket kit demand.
+                    </p>
+                  </div>
+                </div>
+
+                <Button 
+                  onClick={() => setShowAiModal(false)}
+                  className="w-full mt-8 bg-emerald-500 hover:bg-emerald-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-emerald-500/25 transition-all"
+                >
+                  Got it, thanks!
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

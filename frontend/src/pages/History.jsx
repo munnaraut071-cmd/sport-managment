@@ -18,6 +18,7 @@ import {
   Loader2,
   Sparkles,
   History as HistoryIcon,
+  Edit,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -32,11 +33,14 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/components/ui/use-toast';
 import { transactionsAPI } from '@/services/api';
 
 const History = () => {
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, isStaff } = useAuth();
+  const canEdit = isAdmin || isStaff;
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [transactions, setTransactions] = useState([]);
@@ -44,6 +48,10 @@ const History = () => {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [viewingTransaction, setViewingTransaction] = useState(null);
+  const [editingTransaction, setEditingTransaction] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [updating, setUpdating] = useState(false);
+  const { toast } = useToast();
   const [stats, setStats] = useState({
     total: 0,
     active: 0,
@@ -62,9 +70,20 @@ const History = () => {
       const data = response.data.data || [];
       setTransactions(data);
       
-      // Calculate stats
-      const active = data.filter(t => !t.returnDate && new Date(t.dueDate || t.expectedReturnDate) >= new Date()).length;
-      const overdue = data.filter(t => !t.returnDate && new Date(t.dueDate || t.expectedReturnDate) < new Date()).length;
+      // Calculate stats with better logic
+      const now = new Date();
+      const active = data.filter(t => {
+        const isReturned = t.returnDate || t.status === 'returned';
+        if (isReturned) return false;
+        const dueDate = new Date(t.dueDate || t.expectedReturnDate);
+        return dueDate >= now;
+      }).length;
+      const overdue = data.filter(t => {
+        const isReturned = t.returnDate || t.status === 'returned';
+        if (isReturned) return false;
+        const dueDate = new Date(t.dueDate || t.expectedReturnDate);
+        return dueDate < now;
+      }).length;
       const returned = data.filter(t => t.returnDate || t.status === 'returned').length;
       
       setStats({
@@ -88,40 +107,96 @@ const History = () => {
   };
 
   const handleExport = () => {
-    // Create CSV content
-    const headers = ['Kit Name', 'Student', 'Issue Date', 'Due Date', 'Return Date', 'Status', 'Quantity'];
+    if (filteredTransactions.length === 0) {
+      showNotification('No data to export');
+      return;
+    }
+
+    const escape = (val) => {
+      if (val === null || val === undefined) return '""';
+      const str = String(val).replace(/"/g, '""');
+      return `"${str}"`;
+    };
+
+    const headers = ['Transaction ID', 'Kit Name', 'Category', 'Student', 'Email/RollNo', 'Issue Date', 'Due Date', 'Return Date', 'Status', 'Quantity', 'Notes'];
     const rows = filteredTransactions.map(t => [
+      t._id || t.id,
       t.kit?.name || t.kitName,
+      t.kit?.category || 'General',
       t.user?.name || t.userName || t.issuedTo,
+      t.user?.email || t.user?.rollNo || t.rollNo || '-',
       new Date(t.issueDate || t.createdAt).toLocaleDateString(),
       new Date(t.dueDate || t.expectedReturnDate).toLocaleDateString(),
       t.returnDate ? new Date(t.returnDate).toLocaleDateString() : '-',
       t.returnDate || t.status === 'returned' ? 'Returned' : 
         new Date(t.dueDate || t.expectedReturnDate) < new Date() ? 'Overdue' : 'Active',
-      t.quantity || 1
+      t.quantity || 1,
+      t.notes || ''
     ]);
     
-    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const csvContent = [
+      headers.map(escape).join(','), 
+      ...rows.map(r => r.map(escape).join(','))
+    ].join('\n');
     
-    // Download CSV
-    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `transaction-history-${new Date().toISOString().split('T')[0]}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    const link = document.createElement('a');
+    const timestamp = new Date().toISOString().split('T')[0];
+    const filename = `sportkits-history-${statusFilter}-${timestamp}.csv`;
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
     
-    showNotification('Transaction history exported to CSV!');
+    showNotification(`History exported as ${filename}`);
   };
+
 
   const handlePrint = () => {
     showNotification('Sending to printer...');
   };
 
+  const handleUpdateTransaction = async () => {
+    if (!canEdit) {
+      toast({ title: 'Staff access required', variant: 'destructive' });
+      return;
+    }
+    if (!editingTransaction.dueDate) {
+      toast({ title: 'Due date is required', variant: 'destructive' });
+      return;
+    }
+
+    try {
+      setUpdating(true);
+      const response = await transactionsAPI.update(editingTransaction._id || editingTransaction.id, {
+        dueDate: editingTransaction.dueDate,
+        notes: editingTransaction.notes
+      });
+      const updatedTx = response.data?.data || response.data;
+      if (updatedTx) {
+        setTransactions(prev => prev.map(t => (t._id === updatedTx._id || t.id === updatedTx.id) ? updatedTx : t));
+        setShowEditModal(false);
+        setEditingTransaction(null);
+        toast({ title: 'Transaction updated successfully!' });
+      }
+    } catch (error) {
+      console.error('Update failed:', error);
+      toast({ title: 'Failed to update transaction', variant: 'destructive' });
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   const handleReturnKit = async (id) => {
+    if (!canEdit) {
+      toast({ title: 'Staff access required', variant: 'destructive' });
+      return;
+    }
     try {
       const response = await transactionsAPI.returnKit({
         transactionId: id,
@@ -441,16 +516,30 @@ const History = () => {
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        {(!transaction.returnDate && transaction.status !== 'returned') && (
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => handleReturnKit(transaction._id || transaction.id)}
-                            className="h-8 w-8 p-0 text-emerald-600 dark:text-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10"
-                            title="Return Kit"
-                          >
-                            <ArrowUpCircle className="h-4 w-4" />
-                          </Button>
+                        {(!transaction.returnDate && transaction.status !== 'returned') && canEdit && (
+                          <>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => {
+                                setEditingTransaction({ ...transaction });
+                                setShowEditModal(true);
+                              }}
+                              className="h-8 w-8 p-0 text-amber-600 dark:text-amber-500 hover:text-amber-700 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10"
+                              title="Edit Details"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => handleReturnKit(transaction._id || transaction.id)}
+                              className="h-8 w-8 p-0 text-emerald-600 dark:text-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10"
+                              title="Return Kit"
+                            >
+                              <ArrowUpCircle className="h-4 w-4" />
+                            </Button>
+                          </>
                         )}
                       </div>
                     </TableCell>
@@ -527,7 +616,7 @@ const History = () => {
                     <p className="text-slate-500 dark:text-slate-400 text-xs">Status</p>
                     <div className="flex items-center gap-2 mt-1">
                       {getStatusIcon(viewingTransaction.status)}
-                      {getStatusBadge(viewingTransaction.status, viewingTransaction.dueDate)}
+                      {getStatusBadge(viewingTransaction)}
                     </div>
                   </div>
                   <div className="bg-gray-100 dark:bg-slate-800/50 p-3 rounded-lg">
@@ -536,6 +625,17 @@ const History = () => {
                   </div>
                 </div>
                 
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-gray-100 dark:bg-slate-800/50 p-3 rounded-lg">
+                    <p className="text-slate-500 dark:text-slate-400 text-xs">Quantity</p>
+                    <p className="text-gray-900 dark:text-white font-medium mt-1">{viewingTransaction.quantity || 1} units</p>
+                  </div>
+                  <div className="bg-gray-100 dark:bg-slate-800/50 p-3 rounded-lg">
+                    <p className="text-slate-500 dark:text-slate-400 text-xs">Category</p>
+                    <p className="text-gray-900 dark:text-white font-medium mt-1">{viewingTransaction.kit?.category || 'General'}</p>
+                  </div>
+                </div>
+
                 <div className="bg-gray-100 dark:bg-slate-800/50 p-4 rounded-lg space-y-3">
                   <h3 className="text-gray-900 dark:text-white font-medium">Timeline</h3>
                   <div className="space-y-3">
@@ -575,8 +675,30 @@ const History = () => {
                 
                 {isAdmin && (
                   <div className="bg-gray-100 dark:bg-slate-800/50 p-4 rounded-lg">
-                    <p className="text-slate-500 dark:text-slate-400 text-xs mb-2">User</p>
-                    <p className="text-gray-900 dark:text-white font-medium">{viewingTransaction.user?.name || viewingTransaction.userName || viewingTransaction.issuedTo}</p>
+                    <p className="text-slate-500 dark:text-slate-400 text-xs mb-2">User Details</p>
+                    <div className="space-y-1">
+                      <p className="text-gray-900 dark:text-white font-medium">{viewingTransaction.user?.name || viewingTransaction.userName || viewingTransaction.issuedTo}</p>
+                      {(viewingTransaction.user?.rollNo || viewingTransaction.rollNo) && (
+                        <p className="text-slate-500 dark:text-slate-400 text-xs">Roll No: {viewingTransaction.user?.rollNo || viewingTransaction.rollNo}</p>
+                      )}
+                      {(viewingTransaction.user?.email || viewingTransaction.email) && (
+                        <p className="text-slate-500 dark:text-slate-400 text-xs">{viewingTransaction.user?.email || viewingTransaction.email}</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {viewingTransaction.notes && (
+                  <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 p-4 rounded-lg">
+                    <p className="text-amber-700 dark:text-amber-400 text-xs font-semibold uppercase tracking-wider mb-2">Notes</p>
+                    <p className="text-gray-700 dark:text-slate-300 text-sm leading-relaxed">{viewingTransaction.notes}</p>
+                  </div>
+                )}
+
+                {(viewingTransaction.condition || viewingTransaction.returnCondition) && (
+                  <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 p-4 rounded-lg">
+                    <p className="text-blue-700 dark:text-blue-400 text-xs font-semibold uppercase tracking-wider mb-2">Condition on Return</p>
+                    <p className="text-gray-700 dark:text-slate-300 text-sm">{viewingTransaction.condition || viewingTransaction.returnCondition}</p>
                   </div>
                 )}
               </div>
@@ -584,6 +706,49 @@ const History = () => {
           </motion.div>
         )}
       </AnimatePresence>
+      {/* Edit Transaction Modal */}
+      <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
+        <DialogContent className="bg-white dark:bg-[#111827] border-gray-200 dark:border-slate-800">
+          <DialogHeader>
+            <DialogTitle>Edit Transaction</DialogTitle>
+            <DialogDescription>Update the transaction details</DialogDescription>
+          </DialogHeader>
+          {editingTransaction && (
+            <div className="space-y-4 pt-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Due Date</label>
+                <Input
+                  type="date"
+                  value={editingTransaction.dueDate ? new Date(editingTransaction.dueDate).toISOString().split('T')[0] : ''}
+                  onChange={(e) => setEditingTransaction({ ...editingTransaction, dueDate: e.target.value })}
+                  className="bg-gray-50 dark:bg-slate-800"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Notes</label>
+                <textarea
+                  value={editingTransaction.notes || ''}
+                  onChange={(e) => setEditingTransaction({ ...editingTransaction, notes: e.target.value })}
+                  placeholder="Add transaction notes..."
+                  className="w-full min-h-[100px] bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg p-3 text-sm focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <Button variant="outline" onClick={() => setShowEditModal(false)} className="flex-1">
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleUpdateTransaction} 
+                  disabled={updating}
+                  className="flex-1 bg-emerald-500 hover:bg-emerald-600"
+                >
+                  {updating ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

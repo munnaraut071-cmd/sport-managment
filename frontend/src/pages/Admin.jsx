@@ -456,7 +456,12 @@ const Admin = () => {
                           {kit.category === 'Cricket' ? '🏏' :
                            kit.category === 'Football' ? '⚽' :
                            kit.category === 'Badminton' ? '🏸' :
-                           kit.category === 'Basketball' ? '🏀' : '🎾'}
+                           kit.category === 'Basketball' ? '🏀' :
+                           kit.category === 'Tennis' ? '🎾' :
+                           kit.category === 'Hockey' ? '🏒' :
+                           kit.category === 'Volleyball' ? '🏐' :
+                           kit.category === 'Table Tennis' ? '🏓' :
+                           kit.category === 'Gym' ? '🏋️' : '📦'}
                         </div>
                         <span className="text-gray-900 dark:text-white font-medium">{kit.name}</span>
                       </div>
@@ -1049,17 +1054,25 @@ const Admin = () => {
                   Cancel
                 </button>
                 <button 
-                  onClick={() => {
-                    const updatedKit = {
-                      ...selectedKit,
-                      status: selectedKit.available < 5 ? 'low_stock' : 'active'
-                    };
-                    setKits(kits.map(k => k.id === selectedKit.id ? updatedKit : k));
-                    setToastMessage('Kit updated successfully!');
-                    setShowToast(true);
-                    setTimeout(() => setShowToast(false), 3000);
-                    setShowEditKit(false);
-                    setSelectedKit(null);
+                  onClick={async () => {
+                    try {
+                      const updatedKitData = {
+                        ...selectedKit,
+                        status: selectedKit.available < 5 ? 'low_stock' : 'active'
+                      };
+                      await kitsAPI.update(selectedKit._id || selectedKit.id, updatedKitData);
+                      setKits(kits.map(k => (k._id === selectedKit._id || k.id === selectedKit.id) ? updatedKitData : k));
+                      setToastMessage('Kit updated successfully!');
+                      setShowToast(true);
+                      setTimeout(() => setShowToast(false), 3000);
+                      setShowEditKit(false);
+                      setSelectedKit(null);
+                    } catch (error) {
+                      console.error('Update failed:', error);
+                      setToastMessage('Update failed!');
+                      setShowToast(true);
+                      setTimeout(() => setShowToast(false), 3000);
+                    }
                   }}
                   className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-2.5 rounded-lg font-medium transition-colors"
                 >
@@ -1090,13 +1103,21 @@ const Admin = () => {
                 Cancel
               </button>
               <button 
-                onClick={() => {
-                  setKits(kits.filter(k => k.id !== selectedKit.id));
-                  setToastMessage('Kit deleted successfully!');
-                  setShowToast(true);
-                  setTimeout(() => setShowToast(false), 3000);
-                  setShowDeleteKit(false);
-                  setSelectedKit(null);
+                onClick={async () => {
+                  try {
+                    await kitsAPI.delete(selectedKit._id || selectedKit.id);
+                    setKits(kits.filter(k => (k._id !== selectedKit._id && k.id !== selectedKit.id)));
+                    setToastMessage('Kit deleted successfully!');
+                    setShowToast(true);
+                    setTimeout(() => setShowToast(false), 3000);
+                    setShowDeleteKit(false);
+                    setSelectedKit(null);
+                  } catch (error) {
+                    console.error('Delete failed:', error);
+                    setToastMessage('Delete failed!');
+                    setShowToast(true);
+                    setTimeout(() => setShowToast(false), 3000);
+                  }
                 }}
                 className="flex-1 bg-red-500 hover:bg-red-600 text-white py-2.5 rounded-lg font-medium transition-colors"
               >

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Tournament = require('../models/Tournament');
 const Kit = require('../models/Kit');
+const User = require('../models/User');
 const { protect, adminOnly } = require('../middleware/auth');
 const { sendTournamentNotification } = require('../utils/notifications');
 
@@ -62,10 +63,10 @@ router.get('/:id', protect, async (req, res, next) => {
 
 // @route   POST /api/tournaments
 // @desc    Create new tournament
-// @access  Admin
-router.post('/', adminOnly, async (req, res, next) => {
+// @access  Private
+router.post('/', protect, async (req, res, next) => {
   try {
-    const { eventName, description, eventType, startDate, endDate, reservedKits, priority, maxKitsPerUser } = req.body;
+    const { eventName, description, eventType, startDate, endDate, location, sport, reservedKits, priority, maxKitsPerUser } = req.body;
     
     // Validate kit availability
     for (const reserve of reservedKits || []) {
@@ -97,6 +98,45 @@ router.post('/', adminOnly, async (req, res, next) => {
     res.status(201).json({
       success: true,
       message: 'Tournament created successfully',
+      data: tournament
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// @route   PUT /api/tournaments/:id
+// @desc    Update tournament details
+// @access  Private
+router.put('/:id', protect, async (req, res, next) => {
+  try {
+    const { eventName, description, eventType, location, startDate, endDate, priority, status, sport } = req.body;
+    
+    const tournament = await Tournament.findById(req.params.id);
+    if (!tournament) {
+      return res.status(404).json({ success: false, message: 'Tournament not found' });
+    }
+    
+    // Check authorization: admin or creator
+    if (req.user.role !== 'admin' && tournament.createdBy.toString() !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'Not authorized to update this tournament' });
+    }
+    
+    // Apply updates
+    if (eventName) tournament.eventName = eventName;
+    if (description !== undefined) tournament.description = description;
+    if (eventType || sport) tournament.eventType = eventType || sport || tournament.eventType;
+    if (location !== undefined) tournament.location = location;
+    if (startDate) tournament.startDate = startDate;
+    if (endDate) tournament.endDate = endDate;
+    if (priority) tournament.priority = priority;
+    if (status) tournament.status = status;
+    
+    await tournament.save();
+    
+    res.json({
+      success: true,
+      message: 'Tournament updated successfully',
       data: tournament
     });
   } catch (error) {
@@ -256,13 +296,18 @@ router.put('/:id/complete', adminOnly, async (req, res, next) => {
 
 // @route   DELETE /api/tournaments/:id
 // @desc    Delete tournament
-// @access  Admin
-router.delete('/:id', adminOnly, async (req, res, next) => {
+// @access  Private
+router.delete('/:id', protect, async (req, res, next) => {
   try {
     const tournament = await Tournament.findById(req.params.id);
     
     if (!tournament) {
       return res.status(404).json({ success: false, message: 'Tournament not found' });
+    }
+    
+    // Check authorization: admin or creator
+    if (req.user.role !== 'admin' && tournament.createdBy.toString() !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'Not authorized to delete this tournament' });
     }
     
     // Release kits if active

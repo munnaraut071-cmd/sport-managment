@@ -3,11 +3,13 @@ const router = express.Router();
 const Kit = require('../models/Kit');
 const User = require('../models/User');
 const Transaction = require('../models/Transaction');
+const Tournament = require('../models/Tournament');
+const Recommendation = require('../models/Recommendation');
 const { protect, adminOnly } = require('../middleware/auth');
 const { predictDemand, getComprehensiveForecast, getQuarterlyForecast } = require('../ai/demandPrediction');
 const { generateRecommendations, getSeasonalRecommendations } = require('../ai/recommendation');
 const { analyzeUserBehavior, generateSmartReminderSchedule, predictReturnTimeliness } = require('../ai/behaviorAnalysis');
-const { generateRestockingAlerts, getUpcomingEvents, getCurrentAcademicPeriod } = require('../ai/academicCalendar');
+const { generateRestockingAlerts, getUpcomingEvents, getCurrentAcademicPeriod, generateTournamentRecommendations, generatePersonalizedRecommendations } = require('../ai/academicCalendar');
 const { detectUserAnomalies, detectSystemAnomalies, batchAnomalyScan } = require('../ai/anomalyDetection');
 const { calculateKitHealth, getMaintenanceSchedule, generateMaintenanceAlerts, recordMaintenance } = require('../ai/predictiveMaintenance');
 const aiService = require('../services/aiService');
@@ -54,6 +56,61 @@ router.get('/recommendations', adminOnly, async (req, res, next) => {
     res.json({
       success: true,
       data: recommendations
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// @route   GET /api/ai/recommendations/upcoming-events
+// @desc    Get tournament/event based restocking recommendations
+// @access  Admin
+router.get('/recommendations/upcoming-events', adminOnly, async (req, res, next) => {
+  try {
+    const recommendations = await generateTournamentRecommendations(Kit, Transaction, Tournament, Recommendation);
+    
+    res.json({
+      success: true,
+      count: recommendations.length,
+      data: recommendations
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// @route   GET /api/ai/kits/recommend/:playerId
+// @desc    Get personalized kit recommendations for a player
+// @access  Protect (Admin or the user themselves)
+router.get('/kits/recommend/:playerId', protect, async (req, res, next) => {
+  try {
+    if (req.user.role !== 'admin' && req.user.id !== req.params.playerId) {
+      return res.status(403).json({ success: false, message: 'Access denied' });
+    }
+    const recommendations = await generatePersonalizedRecommendations(User, Kit, Transaction, Recommendation, req.params.playerId);
+    
+    res.json({
+      success: true,
+      count: recommendations.length,
+      data: recommendations
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// @route   GET /api/ai/inventory/low-stock
+// @desc    Predict required stock before tournaments and suggest replacements
+// @access  Admin
+router.get('/inventory/low-stock', adminOnly, async (req, res, next) => {
+  try {
+    const recommendations = await generateTournamentRecommendations(Kit, Transaction, Tournament, Recommendation);
+    const lowStock = recommendations.filter(r => r.type === 'restock' && r.quantityNeeded > 0);
+    
+    res.json({
+      success: true,
+      count: lowStock.length,
+      data: lowStock
     });
   } catch (error) {
     next(error);

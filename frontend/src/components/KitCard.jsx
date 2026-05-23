@@ -1,7 +1,8 @@
 import { motion } from 'framer-motion';
 import { 
-  Package, ArrowUpCircle, QrCode, Info,
-  CheckCircle, AlertCircle, Clock
+  Package, ArrowUpCircle, QrCode, Eye,
+  CheckCircle, AlertCircle, Clock,
+  Trophy, Activity, Target, Zap, CircleDot, Dumbbell, Package2
 } from 'lucide-react';
 
 // Reusable Kit Card Component - Used in Dashboard, Kits, Issue pages
@@ -24,14 +25,34 @@ const KitCard = ({
   const status = getAvailabilityStatus();
   const StatusIcon = status.icon;
 
+  // Get Lucide Icon for category
+  const getCategoryIcon = (category) => {
+    const icons = {
+      'Cricket': Trophy,
+      'Football': Activity,
+      'Badminton': Zap,
+      'Basketball': CircleDot,
+      'Tennis': Target,
+      'Hockey': Activity,
+      'Volleyball': Activity,
+      'Table Tennis': Target,
+      'Gym': Dumbbell,
+      'Other': Package2
+    };
+    return icons[category] || icons[category?.charAt(0).toUpperCase() + category?.slice(1).toLowerCase()] || Package2;
+  };
+
+  const CategoryIcon = getCategoryIcon(kit.category);
+
   // Get emoji for category
   const getKitEmoji = (kit) => {
     if (kit.emoji) return kit.emoji;
     const emojis = {
       'Cricket': '🏏', 'Football': '⚽', 'Badminton': '🏸', 'Basketball': '🏀',
-      'Tennis': '🎾', 'Hockey': '🏒', 'Volleyball': '🏐', 'Table Tennis': '🏓', 'Other': '📦'
+      'Tennis': '🎾', 'Hockey': '🏒', 'Volleyball': '🏐', 'Table Tennis': '🏓', 
+      'Gym': '🏋️', 'Other': '📦'
     };
-    return emojis[kit.category] || '📦';
+    return emojis[kit.category] || emojis[kit.category?.charAt(0).toUpperCase() + kit.category?.slice(1).toLowerCase()] || '📦';
   };
 
   return (
@@ -70,7 +91,7 @@ const KitCard = ({
             style={{ display: kit.image ? 'none' : 'flex' }}
           >
             <span className="text-5xl mb-2">{getKitEmoji(kit)}</span>
-            <Package className="w-8 h-8 text-slate-600" />
+            <CategoryIcon className="w-8 h-8 text-slate-600" />
           </div>
         </div>
       </div>
@@ -112,7 +133,7 @@ const KitCard = ({
                 onClick={() => onViewDetails(kit)}
                 className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition-colors text-sm font-medium"
               >
-                <Info className="w-4 h-4" />
+                <Eye className="w-4 h-4" />
                 Details
               </button>
             )}

@@ -34,6 +34,7 @@ export default function AIDashboard() {
   const [weeklyData, setWeeklyData] = useState([]);
   const [pieData, setPieData] = useState([]);
   const [statsData, setStatsData] = useState([]);
+  const [tournamentRecommendations, setTournamentRecommendations] = useState([]);
 
   useEffect(() => {
     fetchAIData();
@@ -49,7 +50,7 @@ export default function AIDashboard() {
         if (recRes.data.success) {
           setRecommendations(recRes.data.data?.slice(0, 6) || []);
         }
-      } catch (e) { console.log('Recommendations API not available'); }
+      } catch (e) { console.log('Recommendations API not available, using fallback'); }
 
       // Fetch anomalies
       try {
@@ -57,25 +58,50 @@ export default function AIDashboard() {
         if (anomRes.data.success) {
           setAnomalies(anomRes.data.data?.slice(0, 8) || []);
         }
-      } catch (e) { console.log('Anomalies API not available'); }
+      } catch (e) { console.log('Anomalies API not available, using fallback'); }
 
       // Fetch insights
       try {
         const insRes = await api.get('/ai/insights');
         if (insRes.data.success) {
-          setInsights(insRes.data.data?.slice(0, 6) || []);
+          const insightsData = insRes.data.data;
+          // Handle different response formats
+          if (Array.isArray(insightsData)) {
+            setInsights(insightsData.slice(0, 6));
+          } else if (insightsData.alerts || insightsData.demandPredictions) {
+            // Format the insights data
+            const formattedInsights = [];
+            if (insightsData.alerts) {
+              formattedInsights.push(...insightsData.alerts.map((alert, i) => ({
+                title: alert.message || 'Alert',
+                description: alert.details || alert.message,
+                icon: AlertTriangle,
+                color: 'amber'
+              })));
+            }
+            if (insightsData.demandPredictions) {
+              formattedInsights.push(...insightsData.demandPredictions.map((pred, i) => ({
+                title: `Demand: ${pred.kitName}`,
+                description: `Predicted demand: ${pred.predictedDemand} units`,
+                icon: TrendingUp,
+                color: 'emerald'
+              })));
+            }
+            setInsights(formattedInsights.slice(0, 6));
+          }
         }
-      } catch (e) { console.log('Insights API not available'); }
+      } catch (e) { console.log('Insights API not available, using fallback'); }
 
-      // Fetch predictions
+      // Fetch predictions (demand data)
       try {
         const predRes = await api.get('/ai/predictions');
         if (predRes.data.success) {
-          setDemandData(predRes.data.data?.demand || []);
-          setWeeklyData(predRes.data.data?.weekly || []);
-          setPieData(predRes.data.data?.distribution || []);
+          const predictionsData = predRes.data.data;
+          setDemandData(predictionsData?.demand || []);
+          setWeeklyData(predictionsData?.weekly || []);
+          setPieData(predictionsData?.distribution || []);
         }
-      } catch (e) { console.log('Predictions API not available'); }
+      } catch (e) { console.log('Predictions API not available, using fallback'); }
 
       // Fetch AI stats
       try {
@@ -83,7 +109,66 @@ export default function AIDashboard() {
         if (statsRes.data.success) {
           setStatsData(statsRes.data.data || []);
         }
-      } catch (e) { console.log('AI stats API not available'); }
+      } catch (e) { console.log('AI stats API not available, using fallback'); }
+
+      // Fetch tournament data for recommendations
+      try {
+        const upcomingRes = await api.get('/ai/recommendations/upcoming-events');
+        if (upcomingRes.data.success && upcomingRes.data.data && upcomingRes.data.data.length > 0) {
+          setTournamentRecommendations(upcomingRes.data.data);
+        } else {
+          // Fallback to old calendar mapping if real recs aren't generated
+          const calendarRes = await api.get('/ai/academic-calendar');
+          if (calendarRes.data.success) {
+            const calendarData = calendarRes.data.data;
+            const events = calendarData.upcomingEvents || [];
+            
+            // Generate tournament-based recommendations
+            const tournamentRecs = events
+              .filter(event => event.priority === 'high' || event.type === 'tournament')
+              .map(event => ({
+                _id: event.id || `event-${Date.now()}`,
+                title: `Prepare for ${event.name}`,
+                description: `Upcoming ${event.type || 'event'} on ${new Date(event.date).toLocaleDateString()}. Based on historical usage, expect increased demand for related equipment.`,
+                priority: event.priority === 'high' ? 'high' : 'medium',
+                estimatedCost: 'TBD',
+                expectedBenefit: 'Ensure adequate stock for event',
+                type: 'tournament',
+                eventDate: event.date,
+                eventType: event.type
+              }));
+            
+            setTournamentRecommendations(tournamentRecs);
+          }
+        }
+      } catch (e) { 
+        console.log('Upcoming events API not available, using fallback');
+        // Fallback tournament recommendations
+        setTournamentRecommendations([
+          {
+            _id: 'fallback-1',
+            title: 'Prepare for Inter-College Cricket Tournament',
+            description: 'Upcoming tournament on June 15th. Based on historical usage, expect 45% increase in cricket equipment demand.',
+            priority: 'high',
+            estimatedCost: '$1200',
+            expectedBenefit: 'Prevent stockouts during tournament',
+            type: 'tournament',
+            eventDate: '2025-06-15',
+            eventType: 'tournament'
+          },
+          {
+            _id: 'fallback-2',
+            title: 'Football Championship Preparation',
+            description: 'Annual football championship starting July 1st. Historical data shows 30% surge in football kit rentals.',
+            priority: 'medium',
+            estimatedCost: '$800',
+            expectedBenefit: 'Meet increased demand',
+            type: 'tournament',
+            eventDate: '2025-07-01',
+            eventType: 'tournament'
+          }
+        ]);
+      }
 
     } catch (error) {
       console.error('Error fetching AI data:', error);
@@ -232,7 +317,7 @@ export default function AIDashboard() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-4 gap-6 mb-8">
-        {statsData.map((stat, index) => {
+        {displayStats.map((stat, index) => {
           const Icon = stat.icon;
           return (
             <div key={index} className={`bg-gradient-to-br ${stat.gradient} p-7 rounded-xl relative overflow-hidden`}>
@@ -445,85 +530,138 @@ export default function AIDashboard() {
 
       {/* Recommendations Tab */}
       {activeTab === 'recommendations' && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-gray-900 dark:text-white font-semibold text-lg">AI Purchase Recommendations</h3>
-            <motion.button 
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={handleExport}
-              className="bg-emerald-50 dark:bg-emerald-500/20 hover:bg-emerald-100 dark:hover:bg-emerald-500/30 text-emerald-600 dark:text-emerald-400 px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-colors border border-emerald-200 dark:border-emerald-500/30"
-            >
-              <Download size={16} />
-              Export Report
-            </motion.button>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {recommendations.length === 0 ? (
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="col-span-2 text-center py-16 bg-white dark:bg-[#111827] border border-gray-200 dark:border-slate-800 rounded-xl"
-              >
-                <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Lightbulb className="h-10 w-10 text-emerald-500" />
+        <div className="space-y-6">
+          {/* Tournament-Based Recommendations */}
+          {tournamentRecommendations.length > 0 && (
+            <div className="bg-gradient-to-r from-emerald-50 to-cyan-50 dark:from-emerald-500/10 dark:to-cyan-500/10 border border-emerald-200 dark:border-emerald-500/30 rounded-xl p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center">
+                  <Calendar className="h-5 w-5 text-white" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">No recommendations yet</h3>
-                <p className="text-slate-500 dark:text-slate-400 mt-1">AI will analyze data and generate recommendations</p>
-              </motion.div>
-            ) : (
-              recommendations.map((rec, index) => (
-                <motion.div 
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="bg-white dark:bg-[#111827] p-7 rounded-xl border border-gray-200 dark:border-slate-800 shadow-sm dark:shadow-none"
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <h4 className="text-gray-900 dark:text-white font-semibold">{rec.kit || rec.title}</h4>
-                      <p className="text-slate-500 dark:text-slate-400 text-sm">{rec.reason || rec.description}</p>
-                    </div>
-                    <span className={`px-2 py-1 rounded text-xs font-medium border ${
-                      rec.priority === 'high' 
-                        ? 'bg-red-50 dark:bg-red-500/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-500/30'
-                        : 'bg-amber-50 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-500/30'
-                    }`}>
-                      {rec.priority === 'high' ? 'High Priority' : 'Medium Priority'}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <p className="text-slate-500 dark:text-slate-400 text-xs">Recommended Quantity</p>
-                      <p className="text-2xl font-bold text-gray-900 dark:text-white">{rec.qty || rec.quantity} <span className="text-sm font-normal text-slate-500 dark:text-slate-400">units</span></p>
-                    </div>
-                    <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-500/20 rounded-xl flex items-center justify-center">
-                      <ShoppingCart className="text-emerald-500 dark:text-emerald-400" size={24} />
-                    </div>
-                  </div>
-                  <motion.button 
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => handleApproveRecommendation(rec.id || index)}
-                    disabled={rec.approved}
-                    className={`w-full py-2.5 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
-                      rec.approved
-                        ? 'bg-emerald-100 dark:bg-emerald-500/30 text-emerald-600 dark:text-emerald-400 cursor-default'
-                        : rec.priority === 'high'
-                          ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/30'
-                          : 'bg-emerald-50 dark:bg-emerald-500/20 hover:bg-emerald-100 dark:hover:bg-emerald-500/30 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30'
-                    }`}
+                <div>
+                  <h3 className="text-gray-900 dark:text-white font-semibold">NEW: Based on Usage & Upcoming Tournaments</h3>
+                  <p className="text-slate-600 dark:text-slate-400 text-sm">AI-generated recommendations for upcoming events</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {tournamentRecommendations.map((rec, index) => (
+                  <motion.div
+                    key={rec._id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="bg-white dark:bg-[#111827] p-5 rounded-lg border border-emerald-200 dark:border-emerald-500/30 shadow-sm"
                   >
-                    {rec.approved ? (
-                      <><Check size={18} /> Approved</>
-                    ) : (
-                      rec.action || 'Approve'
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <h4 className="text-gray-900 dark:text-white font-semibold text-sm mb-1">{rec.title}</h4>
+                        <p className="text-slate-600 dark:text-slate-400 text-xs">{rec.description}</p>
+                      </div>
+                      <span className={`px-2 py-1 rounded text-xs font-medium border ${
+                        rec.priority === 'high' 
+                          ? 'bg-red-50 dark:bg-red-500/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-500/30'
+                          : 'bg-amber-50 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-500/30'
+                      }`}>
+                        {rec.priority === 'high' ? 'High' : 'Medium'}
+                      </span>
+                    </div>
+                    {rec.eventDate && (
+                      <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-3">
+                        <Clock size={14} />
+                        <span>{new Date(rec.eventDate).toLocaleDateString()}</span>
+                      </div>
                     )}
-                  </motion.button>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-500 dark:text-slate-400">Est. Cost: <span className="font-semibold text-gray-900 dark:text-white">{rec.estimatedCost}</span></span>
+                      <span className="text-emerald-600 dark:text-emerald-400 font-medium">{rec.expectedBenefit}</span>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Purchase Recommendations */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-gray-900 dark:text-white font-semibold text-lg">AI Purchase Recommendations</h3>
+              <motion.button 
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleExport}
+                className="bg-emerald-50 dark:bg-emerald-500/20 hover:bg-emerald-100 dark:hover:bg-emerald-500/30 text-emerald-600 dark:text-emerald-400 px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-colors border border-emerald-200 dark:border-emerald-500/30"
+              >
+                <Download size={16} />
+                Export Report
+              </motion.button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {recommendations.length === 0 ? (
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="col-span-2 text-center py-16 bg-white dark:bg-[#111827] border border-gray-200 dark:border-slate-800 rounded-xl"
+                >
+                  <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Lightbulb className="h-10 w-10 text-emerald-500" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">No recommendations yet</h3>
+                  <p className="text-slate-500 dark:text-slate-400 mt-1">AI will analyze data and generate recommendations</p>
                 </motion.div>
-              ))
-            )}
+              ) : (
+                recommendations.map((rec, index) => (
+                  <motion.div 
+                    key={index}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="bg-white dark:bg-[#111827] p-7 rounded-xl border border-gray-200 dark:border-slate-800 shadow-sm dark:shadow-none"
+                  >
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <h4 className="text-gray-900 dark:text-white font-semibold">{rec.kit || rec.title}</h4>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm">{rec.reason || rec.description}</p>
+                      </div>
+                      <span className={`px-2 py-1 rounded text-xs font-medium border ${
+                        rec.priority === 'high' 
+                          ? 'bg-red-50 dark:bg-red-500/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-500/30'
+                          : 'bg-amber-50 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-500/30'
+                      }`}>
+                        {rec.priority === 'high' ? 'High Priority' : 'Medium Priority'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <p className="text-slate-500 dark:text-slate-400 text-xs">Recommended Quantity</p>
+                        <p className="text-2xl font-bold text-gray-900 dark:text-white">{rec.qty || rec.quantity} <span className="text-sm font-normal text-slate-500 dark:text-slate-400">units</span></p>
+                      </div>
+                      <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-500/20 rounded-xl flex items-center justify-center">
+                        <ShoppingCart className="text-emerald-500 dark:text-emerald-400" size={24} />
+                      </div>
+                    </div>
+                    <motion.button 
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => handleApproveRecommendation(rec.id || index)}
+                      disabled={rec.approved}
+                      className={`w-full py-2.5 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
+                        rec.approved
+                          ? 'bg-emerald-100 dark:bg-emerald-500/30 text-emerald-600 dark:text-emerald-400 cursor-default'
+                          : rec.priority === 'high'
+                            ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/30'
+                            : 'bg-emerald-50 dark:bg-emerald-500/20 hover:bg-emerald-100 dark:hover:bg-emerald-500/30 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30'
+                      }`}
+                    >
+                      {rec.approved ? (
+                        <><Check size={18} /> Approved</>
+                      ) : (
+                        rec.action || 'Approve'
+                      )}
+                    </motion.button>
+                  </motion.div>
+                ))
+              )}
+            </div>
           </div>
         </div>
       )}

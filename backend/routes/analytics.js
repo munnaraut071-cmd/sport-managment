@@ -18,7 +18,7 @@ router.get('/dashboard', protect, async (req, res, next) => {
     // Get available kits count - only from ACTIVE kits
     const kits = await Kit.find({ status: 'active' });
     const availableKits = kits.reduce((sum, kit) => sum + kit.available, 0);
-    const issuedKits = kits.reduce((sum, kit) => sum + (kit.quantity - kit.available), 0);
+    const issuedKits = kits.reduce((sum, kit) => sum + Math.max(0, kit.quantity - kit.available), 0);
     
     // Get overdue transactions
     const overdueTransactions = await Transaction.findOverdue();
@@ -120,7 +120,7 @@ router.get('/category-stats', async (req, res, next) => {
       category: stat._id,
       total: stat.totalKits,
       available: stat.availableKits,
-      issued: stat.totalKits - stat.availableKits,
+      issued: Math.max(0, stat.totalKits - stat.availableKits),
       count: stat.count
     }));
     
@@ -238,7 +238,7 @@ router.get('/kits-usage', async (req, res, next) => {
     // Get current totals for cumulative calculation
     const kits = await Kit.find({ status: 'active' });
     const totalQuantity = kits.reduce((sum, k) => sum + k.quantity, 0);
-    const currentActive = kits.reduce((sum, k) => sum + (k.quantity - k.available), 0);
+    const currentActive = kits.reduce((sum, k) => sum + Math.max(0, k.quantity - k.available), 0);
 
     // Calculate daily snapshots by working backwards or forwards
     // Here we'll just use the daily transactions to show trends
@@ -250,9 +250,9 @@ router.get('/kits-usage', async (req, res, next) => {
     
     const dailyStats = kitStats.map(kit => ({
       name: kit.name,
-      issued: kit.quantity - kit.available,
+      issued: Math.max(0, kit.quantity - kit.available),
       available: kit.available,
-      active: kit.quantity - kit.available,
+      active: Math.max(0, kit.quantity - kit.available),
       category: kit.category
     }));
     

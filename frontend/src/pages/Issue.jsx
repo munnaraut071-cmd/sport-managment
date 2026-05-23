@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Package, Search, User, CheckCircle, 
+import {
+  Package, Search, User, CheckCircle,
   Minus, Plus, Calendar, Clock, ArrowRight,
-  Box, Loader2, Sparkles
+  Box, Loader2, Sparkles, QrCode
 } from "lucide-react";
 import { kitsAPI, transactionsAPI, usersAPI } from '@/services/api';
+import { Badge } from '@/components/ui/badge';
 
 export default function Issue() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -16,9 +17,14 @@ export default function Issue() {
   const [studentName, setStudentName] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [dueDays, setDueDays] = useState(7);
+  const [isCustomDue, setIsCustomDue] = useState(false);
+  const [customDate, setCustomDate] = useState('');
   const [availableKits, setAvailableKits] = useState([]);
   const [loading, setLoading] = useState(true);
   const [recentlyIssued, setRecentlyIssued] = useState([]);
+  const [userSuggestions, setUserSuggestions] = useState([]);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   useEffect(() => {
     fetchKits();
@@ -42,6 +48,30 @@ export default function Issue() {
       setLoading(false);
     }
   };
+
+  const fetchUsers = async (query) => {
+    if (!query || query.length < 2) {
+      setUserSuggestions([]);
+      return;
+    }
+    try {
+      const response = await usersAPI.getAll({ search: query });
+      if (response.data.success) {
+        setUserSuggestions(response.data.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    }
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (studentName && !selectedUser) {
+        fetchUsers(studentName);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [studentName]);
 
   const showNotification = (message) => {
     setToastMessage(message);
@@ -67,18 +97,23 @@ export default function Issue() {
 
     try {
       setIssuing(true);
-      
-      const dueDate = new Date();
-      dueDate.setDate(dueDate.getDate() + dueDays);
-      
-      let userId = null;
-      try {
-        const usersResponse = await usersAPI.getAll({ search: studentName });
-        if (usersResponse.data.success && usersResponse.data.data.length > 0) {
-          userId = usersResponse.data.data[0]._id;
+
+      const dueDate = isCustomDue ? new Date(customDate) : new Date();
+      if (!isCustomDue) {
+        dueDate.setDate(dueDate.getDate() + dueDays);
+      }
+
+      let userId = selectedUser?._id || null;
+
+      if (!userId) {
+        try {
+          const usersResponse = await usersAPI.getAll({ search: studentName });
+          if (usersResponse.data.success && usersResponse.data.data.length > 0) {
+            userId = usersResponse.data.data[0]._id;
+          }
+        } catch (e) {
+          console.log('User lookup failed');
         }
-      } catch (e) {
-        console.log('User lookup failed');
       }
 
       const issueData = {
@@ -121,12 +156,15 @@ export default function Issue() {
 
   const filteredKits = availableKits.filter(kit => {
     const matchesSearch = kit.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         kit.category?.toLowerCase().includes(searchTerm.toLowerCase());
+      kit.category?.toLowerCase().includes(searchTerm.toLowerCase());
     const isAvailable = kit.available > 0;
     return matchesSearch && isAvailable;
   });
 
   const getDueDate = () => {
+    if (isCustomDue && customDate) {
+      return new Date(customDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
     const date = new Date();
     date.setDate(date.getDate() + dueDays);
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -139,7 +177,7 @@ export default function Issue() {
       {/* Toast Notification */}
       <AnimatePresence>
         {showToast && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
@@ -173,9 +211,18 @@ export default function Issue() {
                   className="bg-transparent outline-none w-full text-gray-900 dark:text-white text-sm placeholder-slate-500"
                 />
               </div>
-              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
-                <Package size={18} className="text-emerald-500 dark:text-emerald-400" />
-                <span>{totalAvailable} kits available</span>
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                <button
+                  onClick={() => showNotification('QR Scanner starting...')}
+                  className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-4 py-3 rounded-lg border border-slate-700 transition-all shadow-lg shadow-black/20"
+                >
+                  <QrCode size={18} className="text-emerald-400" />
+                  <span className="text-sm font-medium">Scan QR</span>
+                </button>
+                <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 ml-auto sm:ml-0">
+                  <Package size={18} className="text-emerald-500 dark:text-emerald-400" />
+                  <span>{totalAvailable} kits available</span>
+                </div>
               </div>
             </div>
           </div>
@@ -196,20 +243,23 @@ export default function Issue() {
                   whileHover={{ scale: 1.02, y: -2 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setSelectedKit(kit)}
-                  className={`p-4 rounded-xl border cursor-pointer transition-all ${
-                    selectedKit?._id === kit._id
-                      ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-500 shadow-lg shadow-emerald-500/20'
-                      : 'bg-white dark:bg-[#0F172A] border-gray-200 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-slate-700 hover:shadow-md'
-                  }`}
+                  className={`p-4 rounded-xl border cursor-pointer transition-all ${selectedKit?._id === kit._id
+                    ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-500 shadow-lg shadow-emerald-500/20'
+                    : 'bg-white dark:bg-[#0F172A] border-gray-200 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-slate-700 hover:shadow-md'
+                    }`}
                 >
                   <div className="flex items-start gap-4">
-                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                      selectedKit?._id === kit._id ? 'bg-emerald-500' : 'bg-gray-100 dark:bg-slate-800'
-                    }`}>
+                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${selectedKit?._id === kit._id ? 'bg-emerald-500' : 'bg-gray-100 dark:bg-slate-800'
+                      }`}>
                       {kit.emoji ? (
                         <span className="text-2xl">{kit.emoji}</span>
                       ) : (
-                        <Box size={24} className={selectedKit?._id === kit._id ? 'text-white' : 'text-slate-400'} />
+                        <span className="text-2xl">{
+                          kit.category === 'Cricket' ? '🏏' :
+                            kit.category === 'Football' ? '⚽' :
+                              kit.category === 'Badminton' ? '🏸' :
+                                kit.category === 'Basketball' ? '🏀' : '📦'
+                        }</span>
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -228,7 +278,7 @@ export default function Issue() {
                 </motion.div>
               ))}
               {filteredKits.length === 0 && (
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   className="col-span-full text-center py-12 text-slate-500"
@@ -259,7 +309,7 @@ export default function Issue() {
 
             {/* Selected Kit */}
             {selectedKit ? (
-              <motion.div 
+              <motion.div
                 initial={{ scale: 0.95 }}
                 animate={{ scale: 1 }}
                 className="mb-6 p-4 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 rounded-lg"
@@ -275,18 +325,55 @@ export default function Issue() {
             )}
 
             {/* Student Name */}
-            <div className="mb-6">
-              <label className="block text-slate-600 dark:text-slate-400 text-sm mb-2">Student Name</label>
+            <div className="mb-6 relative">
+              <label className="block text-slate-600 dark:text-slate-400 text-sm mb-2">Student Name / Roll No</label>
               <div className="relative">
                 <User size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
                   value={studentName}
-                  onChange={(e) => setStudentName(e.target.value)}
+                  onChange={(e) => {
+                    setStudentName(e.target.value);
+                    setSelectedUser(null);
+                    setShowSuggestions(true);
+                  }}
+                  onFocus={() => setShowSuggestions(true)}
                   placeholder="Enter student name"
                   className="w-full bg-gray-100 dark:bg-slate-800 text-gray-900 dark:text-white pl-10 pr-4 py-3 rounded-lg border border-gray-200 dark:border-slate-700 focus:border-emerald-500 outline-none transition-colors"
                 />
+                {selectedUser && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <CheckCircle size={18} className="text-emerald-500" />
+                  </div>
+                )}
               </div>
+
+              {/* User Suggestions */}
+              <AnimatePresence>
+                {showSuggestions && userSuggestions.length > 0 && !selectedUser && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg shadow-xl overflow-hidden max-h-48 overflow-y-auto"
+                  >
+                    {userSuggestions.map((u) => (
+                      <div
+                        key={u._id}
+                        onClick={() => {
+                          setSelectedUser(u);
+                          setStudentName(u.name);
+                          setShowSuggestions(false);
+                        }}
+                        className="px-4 py-3 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 cursor-pointer transition-colors border-b border-gray-100 dark:border-slate-700 last:border-0"
+                      >
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white">{u.name}</p>
+                        <p className="text-xs text-slate-500">{u.email || u.rollNo || 'Student'}</p>
+                      </div>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Quantity */}
@@ -318,32 +405,75 @@ export default function Issue() {
               </div>
             </div>
 
-            {/* Due Days */}
+            {/* Due Date Selection */}
             <div className="mb-6">
-              <label className="block text-slate-600 dark:text-slate-400 text-sm mb-2">
-                <Clock size={14} className="inline mr-1" />
-                Due Days
+              <label className="block text-slate-600 dark:text-slate-400 text-sm mb-3 flex items-center gap-2">
+                <Clock size={14} className="text-emerald-500" />
+                Due Date
               </label>
-              <select
-                value={dueDays}
-                onChange={(e) => setDueDays(parseInt(e.target.value))}
-                disabled={!selectedKit}
-                className="w-full bg-gray-100 dark:bg-slate-800 text-gray-900 dark:text-white px-4 py-3 rounded-lg border border-gray-200 dark:border-slate-700 focus:border-emerald-500 outline-none disabled:opacity-50 transition-colors"
-              >
-                <option value={3}>3 days</option>
-                <option value={7}>7 days</option>
-                <option value={14}>14 days</option>
-                <option value={30}>30 days</option>
-              </select>
+              
+              <div className="flex flex-wrap gap-2 mb-3">
+                {[3, 7, 14, 30].map((days) => (
+                  <button
+                    key={days}
+                    onClick={() => {
+                      setIsCustomDue(false);
+                      setDueDays(days);
+                    }}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                      !isCustomDue && dueDays === days
+                        ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20'
+                        : 'bg-gray-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-gray-200 dark:hover:bg-slate-700'
+                    }`}
+                  >
+                    {days} Days
+                  </button>
+                ))}
+                <button
+                  onClick={() => setIsCustomDue(true)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    isCustomDue
+                      ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20'
+                      : 'bg-gray-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-gray-200 dark:hover:bg-slate-700'
+                  }`}
+                >
+                  Custom
+                </button>
+              </div>
+
+              {isCustomDue && (
+                <motion.div
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  <input
+                    type="date"
+                    value={customDate}
+                    onChange={(e) => setCustomDate(e.target.value)}
+                    min={new Date().toISOString().split('T')[0]}
+                    className="w-full bg-gray-100 dark:bg-slate-800 text-gray-900 dark:text-white px-4 py-3 rounded-lg border border-gray-200 dark:border-slate-700 focus:border-emerald-500 outline-none transition-colors shadow-sm"
+                  />
+                </motion.div>
+              )}
             </div>
 
-            {/* Due Date Preview */}
-            <div className="mb-6 p-3 bg-gray-100 dark:bg-slate-800/50 rounded-lg">
-              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 text-sm mb-1">
-                <Calendar size={14} />
-                Due Date
+            <div className="mb-6 p-4 bg-emerald-500/5 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 rounded-xl">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 text-sm font-medium">
+                  <Calendar size={16} />
+                  Return By
+                </div>
+                {isCustomDue && (
+                  <Badge className="bg-emerald-500 text-white text-[10px] py-0 px-2 h-4">CUSTOM</Badge>
+                )}
               </div>
-              <p className="text-gray-900 dark:text-white font-medium">{getDueDate()}</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                {getDueDate()}
+              </p>
+              <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                <Clock size={12} />
+                Equipment must be returned before end of day
+              </p>
             </div>
 
             {/* Recently Issued */}

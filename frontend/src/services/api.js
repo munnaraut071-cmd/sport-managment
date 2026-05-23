@@ -114,6 +114,8 @@ export const analyticsAPI = {
 // AI APIs
 export const aiAPI = {
   getRecommendations: () => api.get('/ai/recommendations'),
+  getUpcomingEventsRecommendations: () => api.get('/ai/recommendations/upcoming-events'),
+  getPersonalizedRecommendations: (playerId) => api.get(`/ai/kits/recommend/${playerId}`),
   getPredictions: () => api.get('/ai/predictions'),
   getAnomalies: () => api.get('/ai/anomalies'),
   getInsights: () => api.get('/ai/insights'),
@@ -165,10 +167,15 @@ export const teamsAPI = {
 export const finesAPI = {
   getAll: (params) => api.get('/fines', { params }),
   getById: (id) => api.get(`/fines/${id}`),
+  getMyFines: () => api.get('/fines/my-outstanding'),
+  getStats: () => api.get('/fines/statistics'),
   create: (data) => api.post('/fines', data),
   update: (id, data) => api.put(`/fines/${id}`, data),
   delete: (id) => api.delete(`/fines/${id}`),
-  markPaid: (id) => api.put(`/fines/${id}/paid`),
+  markPaid: (id, data) => api.post(`/fines/${id}/pay`, data),
+  dispute: (id, data) => api.post(`/fines/${id}/dispute`, data),
+  waive: (id, data) => api.post(`/fines/${id}/waive`, data),
+  resolveDispute: (id, data) => api.put(`/fines/${id}/resolve-dispute`, data),
 };
 
 // Chatbot APIs

@@ -12,8 +12,13 @@ const tournamentSchema = new mongoose.Schema({
   },
   eventType: {
     type: String,
-    enum: ['inter-college', 'intra-college', 'sports-day', 'practice', 'other'],
+    enum: ['inter-college', 'intra-college', 'internal', 'inter-department', 'state-level', 'national-level', 'sports-day', 'practice', 'friendly', 'other'],
     default: 'other'
+  },
+  location: {
+    type: String,
+    trim: true,
+    default: 'Main Ground'
   },
   startDate: {
     type: Date,

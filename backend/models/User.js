@@ -31,12 +31,27 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['user', 'staff', 'admin'],
+    enum: ['user', 'staff', 'admin', 'player'],
     default: 'user'
   },
   avatar: {
     type: String,
     default: null
+  },
+  // Player specific fields
+  sportType: {
+    type: [String],
+    default: []
+  },
+  playingPosition: {
+    type: String,
+    trim: true
+  },
+  matchPerformanceScore: {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 100
   },
   status: {
     type: String,

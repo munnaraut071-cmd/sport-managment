@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowDownCircle, Search, Package, User, CheckCircle, X, Calendar, Clock, Check, Loader2, Sparkles } from "lucide-react";
+import { ArrowDownCircle, Search, Package, User, CheckCircle, X, Calendar, Clock, Check, Loader2, Sparkles, QrCode, AlertCircle, ShieldCheck, HeartPulse } from "lucide-react";
 import { transactionsAPI } from '@/services/api';
 
 export default function Return() {
@@ -13,6 +13,9 @@ export default function Return() {
   const [loading, setLoading] = useState(true);
   const [recentlyReturned, setRecentlyReturned] = useState([]);
   const [stats, setStats] = useState({ total: 0, overdue: 0 });
+  const [returnCondition, setReturnCondition] = useState('good');
+  const [returnNotes, setReturnNotes] = useState('');
+  const [showQRScanner, setShowQRScanner] = useState(false);
 
   useEffect(() => {
     loadIssuedKits();
@@ -43,45 +46,59 @@ export default function Return() {
   };
 
   const handleReturn = async (kit) => {
+    const id = kit?._id || kit?.id;
+    if (!id) {
+      showNotification('Error: Missing transaction ID. Please refresh.');
+      return;
+    }
+
     setReturning(true);
     try {
-      // Use the proper return endpoint
       const response = await transactionsAPI.returnKit({ 
-        transactionId: kit._id,
-        condition: 'good',
-        notes: 'Returned via dashboard'
+        transactionId: id,
+        condition: returnCondition,
+        notes: returnNotes || `Returned via return portal on ${new Date().toLocaleDateString()}`
       });
       
-      if (response.data.success) {
-        setIssuedKits(issuedKits.filter(k => k._id !== kit._id));
+      if (response.data.success || response.status === 200) {
+        setIssuedKits(prev => prev.filter(k => (k._id || k.id) !== id));
         setConfirmingReturn(null);
         
-        // Add to recently returned
+        const kitName = kit.kit?.name || kit.name || 'Kit';
+        const studentName = kit.user?.name || kit.student || 'Student';
+        
         setRecentlyReturned(prev => [{
-          kitName: kit.kit?.name || kit.name,
-          studentName: kit.user?.name || kit.student,
+          kitName,
+          studentName,
           time: new Date().toLocaleTimeString()
         }, ...prev].slice(0, 5));
         
-        showNotification(`${kit.kit?.name || kit.name} returned successfully!`);
-        
-        // Refresh stats
+        showNotification(`${kitName} returned successfully!`);
         loadIssuedKits();
       } else {
-        showNotification(response.data.message || 'Failed to return kit. Please try again.');
+        showNotification(response.data.message || 'Failed to return kit.');
       }
     } catch (error) {
       console.error('Return error:', error);
-      showNotification('Error returning kit. Please try again.');
+      const msg = error.response?.data?.message || 'Error returning kit. Please try again.';
+      showNotification(msg);
     } finally {
       setReturning(false);
+      setReturnNotes('');
+      setReturnCondition('good');
     }
   };
 
-  const filteredKits = issuedKits.filter(kit => 
-    (kit.kit?.name || kit.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (kit.user?.name || kit.student || '').toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const [showOverdueOnly, setShowOverdueOnly] = useState(false);
+
+  const filteredKits = issuedKits.filter(kit => {
+    const matchesSearch = (kit.kit?.name || kit.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          (kit.user?.name || kit.student || '').toLowerCase().includes(searchTerm.toLowerCase());
+    if (showOverdueOnly) {
+      return matchesSearch && getDaysRemaining(kit.dueDate || kit.expectedReturnDate) < 0;
+    }
+    return matchesSearch;
+  });
 
   const getDaysRemaining = (dueDate) => {
     const due = new Date(dueDate);
@@ -126,28 +143,51 @@ export default function Return() {
         </div>
       </div>
 
-      {/* Search */}
-      <div className="flex items-center gap-3 bg-white dark:bg-[#111827] px-5 py-3.5 rounded-lg w-full max-w-md mb-8 border border-gray-200 dark:border-slate-800 shadow-sm dark:shadow-none">
-        <Search size={18} className="text-slate-400" />
-        <input
-          type="text"
-          placeholder="Search by kit or student name..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="bg-transparent outline-none w-full text-gray-900 dark:text-white text-sm"
-        />
-        {searchTerm && (
-          <button onClick={() => setSearchTerm('')} className="text-slate-400 hover:text-slate-600">
-            <X size={16} />
-          </button>
-        )}
+      <div className="flex flex-col sm:flex-row items-center gap-4 mb-8">
+        <div className="flex items-center gap-3 bg-white dark:bg-[#111827] px-5 py-3.5 rounded-lg w-full max-w-md border border-gray-200 dark:border-slate-800 shadow-sm dark:shadow-none">
+          <Search size={18} className="text-slate-400" />
+          <input
+            type="text"
+            placeholder="Search by kit or student name..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="bg-transparent outline-none w-full text-gray-900 dark:text-white text-sm"
+          />
+          {searchTerm && (
+            <button onClick={() => setSearchTerm('')} className="text-slate-400 hover:text-slate-600">
+              <X size={16} />
+            </button>
+          )}
+        </div>
+        
+        <button 
+          onClick={() => {
+            showNotification('Initializing QR Scanner...');
+          }}
+          className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-6 py-3.5 rounded-lg border border-slate-700 transition-all shadow-lg shadow-black/20 w-full sm:w-auto"
+        >
+          <QrCode size={18} className="text-emerald-400" />
+          <span className="text-sm font-medium">Scan Kit QR</span>
+        </button>
       </div>
 
       {/* Issued Kits List */}
       <div className="bg-white dark:bg-[#111827] rounded-xl border border-gray-200 dark:border-slate-800 shadow-sm dark:shadow-none">
-        <div className="p-6 border-b border-gray-200 dark:border-slate-800 flex justify-between items-center">
+        <div className="p-6 border-b border-gray-200 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <h2 className="text-gray-900 dark:text-white font-semibold">Currently Issued Kits</h2>
-          <span className="text-slate-500 dark:text-slate-400 text-sm">{filteredKits.length} kits</span>
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => setShowOverdueOnly(!showOverdueOnly)}
+              className={`text-xs px-3 py-1.5 rounded-full border transition-all ${
+                showOverdueOnly 
+                  ? 'bg-red-500/10 border-red-500 text-red-500 font-medium' 
+                  : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500'
+              }`}
+            >
+              Overdue Only
+            </button>
+            <span className="text-slate-500 dark:text-slate-400 text-sm">{filteredKits.length} kits found</span>
+          </div>
         </div>
         <div className="divide-y divide-gray-200 dark:divide-slate-800">
           {loading ? (
@@ -308,7 +348,45 @@ export default function Return() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500 dark:text-slate-400 text-sm">Due Date</span>
-                  <span className="text-gray-900 dark:text-white">{new Date(confirmingReturn.dueDate || confirmingReturn.expectedReturnDate).toLocaleDateString()}</span>
+                  <span className="text-gray-900 dark:text-white font-medium">{new Date(confirmingReturn.dueDate || confirmingReturn.expectedReturnDate).toLocaleDateString()}</span>
+                </div>
+              </div>
+
+              <div className="space-y-4 mb-6">
+                <div>
+                  <label className="block text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase mb-3">Kit Condition</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { id: 'good', label: 'Good', icon: ShieldCheck, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+                      { id: 'damaged', label: 'Damaged', icon: AlertCircle, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+                      { id: 'lost', label: 'Lost', icon: X, color: 'text-red-500', bg: 'bg-red-500/10' }
+                    ].map((cond) => (
+                      <button
+                        key={cond.id}
+                        onClick={() => setReturnCondition(cond.id)}
+                        className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all ${
+                          returnCondition === cond.id 
+                            ? 'border-blue-500 bg-blue-500/10 ring-2 ring-blue-500/20' 
+                            : 'border-gray-200 dark:border-slate-800 hover:border-gray-300 dark:hover:border-slate-700'
+                        }`}
+                      >
+                        <cond.icon size={20} className={returnCondition === cond.id ? 'text-blue-500' : cond.color} />
+                        <span className={`text-xs font-medium ${returnCondition === cond.id ? 'text-blue-500' : 'text-slate-600 dark:text-slate-400'}`}>
+                          {cond.label}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase mb-2">Notes (Optional)</label>
+                  <textarea
+                    value={returnNotes}
+                    onChange={(e) => setReturnNotes(e.target.value)}
+                    placeholder="Add any comments about the return..."
+                    className="w-full bg-gray-50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-800 rounded-lg p-3 text-sm text-gray-900 dark:text-white outline-none focus:border-blue-500 transition-colors h-20 resize-none"
+                  />
                 </div>
               </div>
 

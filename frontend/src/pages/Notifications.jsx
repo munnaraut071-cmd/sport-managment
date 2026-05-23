@@ -46,17 +46,8 @@ const NotificationsPage = () => {
       }
     } catch (error) {
       console.error('Failed to fetch notifications:', error);
-      // Fallback to mock data if API fails
-      setNotifications([
-        { id: 1, title: 'Low Stock Alert', message: 'Cricket Bats are running low. Only 3 units remaining.', type: 'alert', status: 'unread', time: '2 hours ago', icon: AlertTriangle, color: 'red', action: 'View Inventory', category: 'inventory' },
-        { id: 2, title: 'New Tournament Added', message: 'Annual Sports Meet has been scheduled for June 5-10, 2025.', type: 'info', status: 'unread', time: '5 hours ago', icon: Calendar, color: 'blue', action: 'View Calendar', category: 'events' },
-        { id: 3, title: 'Kit Return Overdue', message: 'Football issued to Aman Sharma is 2 days overdue.', type: 'warning', status: 'unread', time: '1 day ago', icon: Clock, color: 'amber', action: 'Send Reminder', category: 'returns' },
-        { id: 4, title: 'AI Recommendation', message: 'High demand predicted for Cricket kits in June. Consider stocking up.', type: 'success', status: 'read', time: '2 days ago', icon: Zap, color: 'emerald', action: 'View Details', category: 'ai' },
-        { id: 5, title: 'User Registration', message: '5 new users registered today. Total active users: 156.', type: 'info', status: 'read', time: '3 days ago', icon: Users, color: 'purple', action: 'View Users', category: 'users' },
-        { id: 6, title: 'System Maintenance', message: 'Scheduled maintenance on May 30, 2025 from 2AM to 4AM.', type: 'info', status: 'archived', time: '1 week ago', icon: Settings, color: 'slate', action: 'View Schedule', category: 'system' },
-        { id: 7, title: 'Monthly Report Ready', message: 'May 2025 usage report is now available for download.', type: 'success', status: 'read', time: '2 weeks ago', icon: TrendingUp, color: 'emerald', action: 'Download Report', category: 'reports' },
-        { id: 8, title: 'Kit Maintenance Due', message: '15 kits are scheduled for maintenance this week.', type: 'warning', status: 'read', time: '2 weeks ago', icon: Package, color: 'amber', action: 'View Schedule', category: 'maintenance' }
-      ]);
+      toast({ title: 'Error', description: 'Failed to load notifications', variant: 'destructive' });
+      setNotifications([]);
     } finally {
       setLoading(false);
     }
