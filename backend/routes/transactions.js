@@ -11,7 +11,7 @@ const { protect, staffAndAdmin } = require('../middleware/auth');
 // @route   GET /api/transactions
 // @desc    Get all transactions
 // @access  Private
-router.get('/', async (req, res, next) => {
+router.get('/', protect, async (req, res, next) => {
   try {
     const { status, userId, kitId, page = 1, limit = 20 } = req.query;
     let query = {};
@@ -52,7 +52,7 @@ router.get('/', async (req, res, next) => {
 // @route   POST /api/transactions/issue
 // @desc    Issue a kit
 // @access  Staff/Admin
-router.post('/issue', staffAndAdmin, [
+router.post('/issue', protect, staffAndAdmin, [
   body('kitId').notEmpty().withMessage('Kit ID is required'),
   body('userId').notEmpty().withMessage('User ID is required'),
   body('dueDate').isISO8601().withMessage('Valid due date is required')
@@ -206,7 +206,7 @@ router.post('/issue', staffAndAdmin, [
 // @route   POST /api/transactions/return
 // @desc    Return a kit
 // @access  Staff/Admin
-router.post('/return', staffAndAdmin, [
+router.post('/return', protect, staffAndAdmin, [
   body('transactionId').notEmpty().withMessage('Transaction ID is required')
 ], async (req, res, next) => {
   try {
@@ -297,7 +297,8 @@ router.post('/return', staffAndAdmin, [
       userId: user._id,
       userName: user.name,
       transactionId: transaction._id,
-      wasLate: transaction.daysOverdue > 0
+      wasLate: transaction.daysOverdue > 0,
+      quantity: transaction.quantity
     });
 
     res.json({

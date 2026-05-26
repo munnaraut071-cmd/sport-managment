@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Package, Search, Filter, Plus, Edit, Trash2, AlertTriangle, CheckCircle, BarChart3 } from 'lucide-react';
+import { Package, Search, Filter, Plus, Edit, Trash2, AlertTriangle, BarChart3 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -171,21 +171,23 @@ const Inventory = () => {
           </h1>
           <p className="text-slate-500 mt-1">Manage all sports kits and equipment</p>
         </div>
-        <Button 
-          className="bg-emerald-500 hover:bg-emerald-600"
-          onClick={() => isAdmin && setShowCreateModal(true)}
-          disabled={!isAdmin}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add New Kit
-        </Button>
+          <motion.button
+            className="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2 px-4 rounded inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            whileHover={{ scale: 1.05 }}
+            onClick={() => isAdmin && setShowCreateModal(true)}
+            disabled={!isAdmin}
+            aria-label="Add New Kit"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add New Kit
+          </motion.button>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
           { label: 'Total Kits', value: stats.total, icon: Package, color: 'blue' },
-          { label: 'Available', value: stats.available, icon: CheckCircle, color: 'emerald' },
+          { label: 'Available', value: stats.available, icon: null, color: 'emerald' },
           { label: 'Low Stock', value: stats.lowStock, icon: AlertTriangle, color: 'amber' },
           { label: 'Out of Stock', value: stats.outOfStock, icon: Package, color: 'red' }
         ].map((stat, index) => (
@@ -198,7 +200,9 @@ const Inventory = () => {
             <Card className="bg-white dark:bg-[#111827] border-gray-200 dark:border-slate-800">
               <CardContent className="p-6 flex items-center gap-4">
                 <div className={`p-3 rounded-lg bg-${stat.color}-100 dark:bg-${stat.color}-500/10`}>
-                  <stat.icon className={`h-6 w-6 text-${stat.color}-600 dark:text-${stat.color}-500`} />
+                  {stat.icon && (
+                    <stat.icon className={`h-6 w-6 text-${stat.color}-600 dark:text-${stat.color}-500`} />
+                  )}
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{stat.value}</p>

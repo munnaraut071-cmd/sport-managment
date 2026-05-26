@@ -17,7 +17,7 @@ const aiService = require('../services/aiService');
 // @route   GET /api/ai/demand-prediction
 // @desc    Get AI demand predictions
 // @access  Admin
-router.get('/demand-prediction', adminOnly, async (req, res, next) => {
+router.get('/demand-prediction', protect, adminOnly, async (req, res, next) => {
   try {
     const predictions = await predictDemand();
     
@@ -33,7 +33,7 @@ router.get('/demand-prediction', adminOnly, async (req, res, next) => {
 // @route   GET /api/ai/purchase-recommendations
 // @desc    Get AI purchase recommendations
 // @access  Admin
-router.get('/purchase-recommendations', adminOnly, async (req, res, next) => {
+router.get('/purchase-recommendations', protect, adminOnly, async (req, res, next) => {
   try {
     const recommendations = await generateRecommendations();
     
@@ -49,7 +49,7 @@ router.get('/purchase-recommendations', adminOnly, async (req, res, next) => {
 // @route   GET /api/ai/recommendations
 // @desc    Alias for purchase recommendations
 // @access  Admin
-router.get('/recommendations', adminOnly, async (req, res, next) => {
+router.get('/recommendations', protect, adminOnly, async (req, res, next) => {
   try {
     const recommendations = await generateRecommendations();
     
@@ -65,7 +65,7 @@ router.get('/recommendations', adminOnly, async (req, res, next) => {
 // @route   GET /api/ai/recommendations/upcoming-events
 // @desc    Get tournament/event based restocking recommendations
 // @access  Admin
-router.get('/recommendations/upcoming-events', adminOnly, async (req, res, next) => {
+router.get('/recommendations/upcoming-events', protect, adminOnly, async (req, res, next) => {
   try {
     const recommendations = await generateTournamentRecommendations(Kit, Transaction, Tournament, Recommendation);
     
@@ -102,7 +102,7 @@ router.get('/kits/recommend/:playerId', protect, async (req, res, next) => {
 // @route   GET /api/ai/inventory/low-stock
 // @desc    Predict required stock before tournaments and suggest replacements
 // @access  Admin
-router.get('/inventory/low-stock', adminOnly, async (req, res, next) => {
+router.get('/inventory/low-stock', protect, adminOnly, async (req, res, next) => {
   try {
     const recommendations = await generateTournamentRecommendations(Kit, Transaction, Tournament, Recommendation);
     const lowStock = recommendations.filter(r => r.type === 'restock' && r.quantityNeeded > 0);
@@ -120,7 +120,7 @@ router.get('/inventory/low-stock', adminOnly, async (req, res, next) => {
 // @route   GET /api/ai/risk-analysis
 // @desc    Get AI risk analysis for all users
 // @access  Admin
-router.get('/risk-analysis', adminOnly, async (req, res, next) => {
+router.get('/risk-analysis', protect, adminOnly, async (req, res, next) => {
   try {
     const { threshold = 50 } = req.query;
     
@@ -161,7 +161,7 @@ router.get('/risk-analysis', adminOnly, async (req, res, next) => {
 // @route   GET /api/ai/user-behavior/:userId
 // @desc    Get AI behavior analysis for specific user
 // @access  Admin
-router.get('/user-behavior/:userId', adminOnly, async (req, res, next) => {
+router.get('/user-behavior/:userId', protect, adminOnly, async (req, res, next) => {
   try {
     const analysis = await analyzeUserBehavior(req.params.userId);
     
@@ -177,7 +177,7 @@ router.get('/user-behavior/:userId', adminOnly, async (req, res, next) => {
 // @route   POST /api/ai/run-analysis
 // @desc    Manually trigger AI analysis
 // @access  Admin
-router.post('/run-analysis', adminOnly, async (req, res, next) => {
+router.post('/run-analysis', protect, adminOnly, async (req, res, next) => {
   try {
     // Run demand prediction
     const demandPredictions = await predictDemand();
@@ -209,7 +209,7 @@ router.post('/run-analysis', adminOnly, async (req, res, next) => {
 // @route   GET /api/ai/insights
 // @desc    Get comprehensive AI insights
 // @access  Admin
-router.get('/insights', adminOnly, async (req, res, next) => {
+router.get('/insights', protect, adminOnly, async (req, res, next) => {
   try {
     // Aggregate various AI insights
     const [
@@ -260,7 +260,7 @@ router.get('/insights', adminOnly, async (req, res, next) => {
 // @route   GET /api/ai/comprehensive-forecast
 // @desc    Get comprehensive demand forecast with academic calendar
 // @access  Admin
-router.get('/comprehensive-forecast', adminOnly, async (req, res, next) => {
+router.get('/comprehensive-forecast', protect, adminOnly, async (req, res, next) => {
   try {
     const forecast = await getComprehensiveForecast();
     
@@ -276,7 +276,7 @@ router.get('/comprehensive-forecast', adminOnly, async (req, res, next) => {
 // @route   GET /api/ai/restocking-alerts
 // @desc    Get AI alerts for restocking based on upcoming events
 // @access  Admin
-router.get('/restocking-alerts', adminOnly, async (req, res, next) => {
+router.get('/restocking-alerts', protect, adminOnly, async (req, res, next) => {
   try {
     const alerts = await generateRestockingAlerts(Kit, Transaction);
     
@@ -293,7 +293,7 @@ router.get('/restocking-alerts', adminOnly, async (req, res, next) => {
 // @route   GET /api/ai/academic-calendar
 // @desc    Get academic calendar and upcoming events
 // @access  Admin
-router.get('/academic-calendar', adminOnly, async (req, res, next) => {
+router.get('/academic-calendar', protect, adminOnly, async (req, res, next) => {
   try {
     const currentPeriod = getCurrentAcademicPeriod();
     const upcomingEvents = getUpcomingEvents(60);
@@ -320,7 +320,7 @@ router.get('/academic-calendar', adminOnly, async (req, res, next) => {
 // @route   GET /api/ai/seasonal-recommendations
 // @desc    Get seasonal buying recommendations
 // @access  Admin
-router.get('/seasonal-recommendations', adminOnly, async (req, res, next) => {
+router.get('/seasonal-recommendations', protect, adminOnly, async (req, res, next) => {
   try {
     const recommendations = await getSeasonalRecommendations();
     
@@ -411,7 +411,7 @@ router.get('/user-preferences/:userId', protect, async (req, res, next) => {
 // @route   GET /api/ai/anomalies/user/:userId
 // @desc    Detect anomalies for specific user
 // @access  Admin
-router.get('/anomalies/user/:userId', adminOnly, async (req, res, next) => {
+router.get('/anomalies/user/:userId', protect, adminOnly, async (req, res, next) => {
   try {
     const analysis = await detectUserAnomalies(req.params.userId);
     
@@ -427,7 +427,7 @@ router.get('/anomalies/user/:userId', adminOnly, async (req, res, next) => {
 // @route   GET /api/ai/anomalies/system
 // @desc    Detect system-wide anomalies
 // @access  Admin
-router.get('/anomalies/system', adminOnly, async (req, res, next) => {
+router.get('/anomalies/system', protect, adminOnly, async (req, res, next) => {
   try {
     const analysis = await detectSystemAnomalies();
     
@@ -443,7 +443,7 @@ router.get('/anomalies/system', adminOnly, async (req, res, next) => {
 // @route   POST /api/ai/anomalies/scan
 // @desc    Run batch anomaly scan on all users
 // @access  Admin
-router.post('/anomalies/scan', adminOnly, async (req, res, next) => {
+router.post('/anomalies/scan', protect, adminOnly, async (req, res, next) => {
   try {
     const results = await batchAnomalyScan();
     
@@ -460,7 +460,7 @@ router.post('/anomalies/scan', adminOnly, async (req, res, next) => {
 // @route   GET /api/ai/anomalies/flagged-users
 // @desc    Get all flagged users
 // @access  Admin
-router.get('/anomalies/flagged-users', adminOnly, async (req, res, next) => {
+router.get('/anomalies/flagged-users', protect, adminOnly, async (req, res, next) => {
   try {
     const results = await batchAnomalyScan();
     
@@ -481,7 +481,7 @@ router.get('/anomalies/flagged-users', adminOnly, async (req, res, next) => {
 // @route   GET /api/ai/maintenance/schedule
 // @desc    Get maintenance schedule for all kits
 // @access  Admin
-router.get('/maintenance/schedule', adminOnly, async (req, res, next) => {
+router.get('/maintenance/schedule', protect, adminOnly, async (req, res, next) => {
   try {
     const schedule = await getMaintenanceSchedule();
     
@@ -497,7 +497,7 @@ router.get('/maintenance/schedule', adminOnly, async (req, res, next) => {
 // @route   GET /api/ai/maintenance/kit/:kitId
 // @desc    Get health score for specific kit
 // @access  Admin
-router.get('/maintenance/kit/:kitId', adminOnly, async (req, res, next) => {
+router.get('/maintenance/kit/:kitId', protect, adminOnly, async (req, res, next) => {
   try {
     const health = await calculateKitHealth(req.params.kitId);
     
@@ -513,7 +513,7 @@ router.get('/maintenance/kit/:kitId', adminOnly, async (req, res, next) => {
 // @route   GET /api/ai/maintenance/alerts
 // @desc    Get maintenance alerts
 // @access  Admin
-router.get('/maintenance/alerts', adminOnly, async (req, res, next) => {
+router.get('/maintenance/alerts', protect, adminOnly, async (req, res, next) => {
   try {
     const alerts = await generateMaintenanceAlerts();
     
@@ -529,7 +529,7 @@ router.get('/maintenance/alerts', adminOnly, async (req, res, next) => {
 // @route   POST /api/ai/maintenance/record/:kitId
 // @desc    Record maintenance activity
 // @access  Admin
-router.post('/maintenance/record/:kitId', adminOnly, async (req, res, next) => {
+router.post('/maintenance/record/:kitId', protect, adminOnly, async (req, res, next) => {
   try {
     const result = await recordMaintenance(req.params.kitId, req.body);
     
@@ -545,7 +545,7 @@ router.post('/maintenance/record/:kitId', adminOnly, async (req, res, next) => {
 // @route   GET /api/ai/health
 // @desc    Check AI service health
 // @access  Admin
-router.get('/health', adminOnly, async (req, res, next) => {
+router.get('/health', protect, adminOnly, async (req, res, next) => {
   try {
     const health = await aiService.checkHealth();
     res.json({
@@ -563,7 +563,7 @@ router.get('/health', adminOnly, async (req, res, next) => {
 // @route   POST /api/ai/forecast-kit/:kitId
 // @desc    Get demand forecast for specific kit using AI microservice
 // @access  Admin
-router.post('/forecast-kit/:kitId', adminOnly, async (req, res, next) => {
+router.post('/forecast-kit/:kitId', protect, adminOnly, async (req, res, next) => {
   try {
     const kit = await Kit.findById(req.params.kitId);
     if (!kit) {
@@ -684,7 +684,7 @@ router.post('/late-return-prediction/:userId', protect, async (req, res, next) =
 // @route   GET /api/ai/anomalies
 // @desc    Get all system anomalies
 // @access  Admin
-router.get('/anomalies', adminOnly, async (req, res, next) => {
+router.get('/anomalies', protect, adminOnly, async (req, res, next) => {
   try {
     const analysis = await detectSystemAnomalies();
     
@@ -707,7 +707,7 @@ router.get('/anomalies', adminOnly, async (req, res, next) => {
 // @route   GET /api/ai/predictions
 // @desc    Get all AI predictions (demand, weekly, distribution)
 // @access  Admin
-router.get('/predictions', adminOnly, async (req, res, next) => {
+router.get('/predictions', protect, adminOnly, async (req, res, next) => {
   try {
     const demandPredictions = await predictDemand();
     const forecast = await getComprehensiveForecast();
@@ -757,7 +757,7 @@ router.get('/predictions', adminOnly, async (req, res, next) => {
 // @route   GET /api/ai/stats
 // @desc    Get AI service statistics
 // @access  Admin
-router.get('/stats', adminOnly, async (req, res, next) => {
+router.get('/stats', protect, adminOnly, async (req, res, next) => {
   try {
     const demandPredictions = await predictDemand();
     const purchaseRecommendations = await generateRecommendations();

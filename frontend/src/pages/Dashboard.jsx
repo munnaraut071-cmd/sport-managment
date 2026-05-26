@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { io } from 'socket.io-client';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Legend, AreaChart, Area,
@@ -187,6 +188,25 @@ const Dashboard = () => {
   // Fetch dashboard data
   useEffect(() => {
     fetchDashboardData();
+    // Initialize Socket.io for real-time updates
+    const socket = io('http://localhost:5001');
+    socket.on('kit_issued', (data) => {
+      setStats((prev) => ({
+        ...prev,
+        issuedKits: prev.issuedKits + (data.quantity || 1),
+        availableKits: Math.max(0, prev.availableKits - (data.quantity || 1)),
+      }));
+    });
+    socket.on('kit_returned', (data) => {
+      setStats((prev) => ({
+        ...prev,
+        issuedKits: Math.max(0, prev.issuedKits - (data.quantity || 1)),
+        availableKits: prev.availableKits + (data.quantity || 1),
+      }));
+    });
+    return () => {
+      socket.disconnect();
+    };
   }, []);
 
   const fetchDashboardData = async () => {

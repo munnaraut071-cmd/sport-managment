@@ -7,7 +7,7 @@ const { protect, adminOnly } = require('../middleware/auth');
 // @route   GET /api/users
 // @desc    Get all users
 // @access  Admin
-router.get('/', adminOnly, async (req, res, next) => {
+router.get('/', protect, adminOnly, async (req, res, next) => {
   try {
     const { role, status, search, page = 1, limit = 20 } = req.query;
     let query = {};
@@ -47,7 +47,7 @@ router.get('/', adminOnly, async (req, res, next) => {
 // @route   GET /api/users/:id
 // @desc    Get single user
 // @access  Admin or Self
-router.get('/:id', async (req, res, next) => {
+router.get('/:id', protect, async (req, res, next) => {
   try {
     // Check if user is requesting own data or is admin
     if (req.user._id.toString() !== req.params.id && req.user.role !== 'admin') {
@@ -78,7 +78,7 @@ router.get('/:id', async (req, res, next) => {
 // @route   PUT /api/users/:id
 // @desc    Update user
 // @access  Admin or Self
-router.put('/:id', [
+router.put('/:id', protect, [
   body('name').optional().trim().notEmpty().withMessage('Name cannot be empty'),
   body('email').optional().isEmail().normalizeEmail().withMessage('Valid email is required')
 ], async (req, res, next) => {
@@ -133,7 +133,7 @@ router.put('/:id', [
 // @route   DELETE /api/users/:id
 // @desc    Delete user
 // @access  Admin
-router.delete('/:id', adminOnly, async (req, res, next) => {
+router.delete('/:id', protect, adminOnly, async (req, res, next) => {
   try {
     const user = await User.findById(req.params.id);
 
@@ -158,7 +158,7 @@ router.delete('/:id', adminOnly, async (req, res, next) => {
 // @route   GET /api/users/:id/risk-analysis
 // @desc    Get user risk analysis
 // @access  Admin
-router.get('/:id/risk-analysis', adminOnly, async (req, res, next) => {
+router.get('/:id/risk-analysis', protect, adminOnly, async (req, res, next) => {
   try {
     const user = await User.findById(req.params.id).select('-password');
 
@@ -216,7 +216,7 @@ router.get('/:id/risk-analysis', adminOnly, async (req, res, next) => {
 // @route   GET /api/users/risky-users
 // @desc    Get users with high risk scores
 // @access  Admin
-router.get('/alerts/risky-users', adminOnly, async (req, res, next) => {
+router.get('/alerts/risky-users', protect, adminOnly, async (req, res, next) => {
   try {
     const threshold = parseInt(req.query.threshold) || 50;
     
